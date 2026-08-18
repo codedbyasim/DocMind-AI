@@ -52,9 +52,10 @@ export default function App() {
   const [authUsername, setAuthUsername] = useState(() => localStorage.getItem('docmind_admin_user') || 'admin');
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('docmind_admin_token')));
   const [loginUsername, setLoginUsername] = useState('admin');
-  const [loginPassword, setLoginPassword] = useState('docmind_admin_password');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
+
 
 
   // Scraper Actions & Results
