@@ -3,10 +3,8 @@ import {
   HeartPulse,
   Wrench,
   CheckCircle2,
-  XCircle,
   AlertTriangle,
   RefreshCw,
-  Play,
   Check,
   X,
   Sparkles,
@@ -158,20 +156,20 @@ export default function AdminHealingPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Self-Healing Monitor</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Self-Healing Monitor</h1>
+          <p className="text-sm text-slate-500 mt-1 font-normal">
             Automatic detection of broken scrapers, AI-assisted selector repairs, and zero-downtime re-indexing.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={fetchHealingData}
             disabled={loading}
-            className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-medium transition-all flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-2xs flex items-center gap-2"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
@@ -179,7 +177,7 @@ export default function AdminHealingPage() {
           <button
             onClick={handleSimulateDegraded}
             disabled={simulating}
-            className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition-all flex items-center gap-2 shadow-sm shadow-amber-600/20"
+            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-sm shadow-amber-500/20"
           >
             <Zap className={`w-3.5 h-3.5 ${simulating ? 'animate-spin' : ''}`} />
             <span>{simulating ? 'Simulating...' : 'Simulate Website Breakage'}</span>
@@ -191,27 +189,27 @@ export default function AdminHealingPage() {
 
       {/* System Health Banner */}
       <div
-        className={`rounded-xl border p-5 backdrop-blur-sm ${
+        className={`rounded-2xl border p-6 shadow-sm ${
           health?.status === 'DEGRADED'
-            ? 'bg-amber-950/30 border-amber-800/80'
+            ? 'bg-amber-50/70 border-amber-200'
             : health?.status === 'HEALING'
-            ? 'bg-cyan-950/30 border-cyan-800/80'
+            ? 'bg-blue-50/70 border-blue-200'
             : health?.status === 'ERROR'
-            ? 'bg-rose-950/30 border-rose-800/80'
-            : 'bg-slate-900/60 border-slate-800/80'
+            ? 'bg-rose-50/70 border-rose-200'
+            : 'bg-white border-slate-200'
         }`}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-cyan-400">
-              <HeartPulse className="w-5 h-5" />
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 shrink-0">
+              <HeartPulse className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-bold text-white">Current Scraper Health:</span>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <span className="text-base font-bold text-slate-900">Current Scraper Health:</span>
                 <StatusBadge status={health?.status || 'HEALTHY'} />
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 leading-relaxed font-normal">
                 {health?.status === 'DEGRADED'
                   ? 'Scraper returned fewer pages than expected. An automatic AI repair is ready for review.'
                   : health?.status === 'HEALING'
@@ -222,8 +220,8 @@ export default function AdminHealingPage() {
           </div>
 
           <div className="text-left sm:text-right shrink-0 text-xs">
-            <div className="text-slate-400">Indexed Documentation:</div>
-            <div className="font-semibold text-white font-mono mt-0.5">
+            <div className="text-slate-400 font-bold uppercase tracking-wider">Indexed Documentation</div>
+            <div className="font-bold text-slate-900 font-mono text-sm mt-1">
               {health?.total_indexed_pages || 0} pages ({health?.total_indexed_chunks || 0} chunks)
             </div>
           </div>
@@ -232,38 +230,38 @@ export default function AdminHealingPage() {
 
       {/* Pending Fix Approval Alert (Human-in-the-Loop Gate) */}
       {latestPendingHeal && (
-        <div className="rounded-xl bg-amber-950/40 border border-amber-700/80 p-5 shadow-lg animate-fadeIn">
-          <div className="flex items-center gap-2 text-amber-300 font-bold text-sm mb-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+        <div className="rounded-2xl bg-amber-50 border border-amber-300 p-6 shadow-sm animate-fadeIn">
+          <div className="flex items-center gap-2 text-amber-900 font-bold text-sm mb-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
             <span>AI Repair Ready for Review</span>
           </div>
 
-          <p className="text-xs text-amber-200/90 mb-4 leading-relaxed">
-            Bright Data AI analyzed the documentation changes and generated an updated scraper script.
+          <p className="text-xs text-amber-900 mb-4 leading-relaxed font-normal">
+            Bright Data AI analyzed the documentation structure change and generated an updated scraper selector configuration.
           </p>
 
-          <div className="p-3.5 rounded-lg bg-slate-950/80 border border-amber-800/60 text-xs font-mono text-slate-200 mb-4 space-y-1">
-            <div className="text-slate-400 text-[11px]">Breakage Detected:</div>
-            <div className="text-amber-300">{latestPendingHeal.trigger_reason}</div>
-            <div className="text-slate-400 text-[11px] pt-1">Proposed Fix:</div>
-            <div className="text-emerald-300">{latestPendingHeal.proposed_fix_summary || 'Selector adjustments applied'}</div>
+          <div className="p-4 rounded-xl bg-white border border-amber-200 text-xs font-mono text-slate-800 mb-5 space-y-1.5 shadow-2xs">
+            <div className="text-slate-400 font-sans text-[11px] font-bold uppercase tracking-wider">Breakage Detected:</div>
+            <div className="text-amber-800 font-semibold">{latestPendingHeal.trigger_reason}</div>
+            <div className="text-slate-400 font-sans text-[11px] font-bold uppercase tracking-wider pt-2">Proposed Fix:</div>
+            <div className="text-emerald-700 font-semibold">{latestPendingHeal.proposed_fix_summary || 'Selector adjustments applied'}</div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => handleApproveHeal(latestPendingHeal.heal_id)}
               disabled={approvingHeal || rejectingHeal}
-              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all flex items-center gap-2 shadow-sm shadow-emerald-600/20"
             >
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-4 h-4" />
               <span>{approvingHeal ? 'Applying Fix...' : 'Approve Fix & Re-Index'}</span>
             </button>
             <button
               onClick={() => handleRejectHeal(latestPendingHeal.heal_id)}
               disabled={approvingHeal || rejectingHeal}
-              className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-800 text-xs font-medium transition-all flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-200 text-xs font-semibold transition-all flex items-center gap-2 shadow-2xs"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
               <span>Reject Fix</span>
             </button>
           </div>
@@ -271,77 +269,77 @@ export default function AdminHealingPage() {
       )}
 
       {/* Manual Repair Trigger Card */}
-      <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-5 backdrop-blur-sm">
-        <h2 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-          <Wrench className="w-4 h-4 text-cyan-400" />
+      <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
+        <h2 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+          <Wrench className="w-4 h-4 text-blue-600" />
           <span>Request Custom AI Repair</span>
         </h2>
-        <p className="text-xs text-slate-400 mb-4">
+        <p className="text-xs text-slate-500 mb-4 font-normal">
           Describe any specific issues (e.g. "Navigation structure changed" or "Missing API parameter tables") to prompt Bright Data AI to adapt the scraper.
         </p>
 
-        <form onSubmit={handleTriggerManualHeal} className="space-y-3">
+        <form onSubmit={handleTriggerManualHeal} className="space-y-3.5">
           <input
             type="text"
             value={manualDescription}
             onChange={(e) => setManualDescription(e.target.value)}
             placeholder="e.g., Target website updated sidebar layout and article headings"
-            className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:border-cyan-500 outline-none"
+            className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-medium"
             required
           />
           <button
             type="submit"
             disabled={triggeringHeal || !manualDescription.trim()}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-all flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold transition-all flex items-center gap-2 shadow-2xs"
           >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <Sparkles className="w-4 h-4 text-blue-600" />
             <span>{triggeringHeal ? 'Requesting AI Fix...' : 'Request AI Repair'}</span>
           </button>
         </form>
       </div>
 
       {/* Repair History Table */}
-      <div className="rounded-xl bg-slate-900/50 border border-slate-800/80 p-5">
-        <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-          <HeartPulse className="w-4 h-4 text-rose-400" />
+      <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
+        <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <HeartPulse className="w-4 h-4 text-rose-600" />
           <span>Repair Events History</span>
         </h2>
 
         {healEvents.length === 0 ? (
-          <div className="py-10 text-center text-xs text-slate-500">
+          <div className="py-10 text-center text-xs text-slate-400 font-normal">
             No self-healing events on record. All scrapers have run without degradation.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-800/80">
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-medium">
-                  <th className="py-3 px-4">Timestamp</th>
-                  <th className="py-3 px-4">Trigger Reason</th>
-                  <th className="py-3 px-4">Proposed Fix</th>
-                  <th className="py-3 px-4">Status</th>
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-500 font-bold">
+                  <th className="py-3.5 px-4">Timestamp</th>
+                  <th className="py-3.5 px-4">Trigger Reason</th>
+                  <th className="py-3.5 px-4">Proposed Fix</th>
+                  <th className="py-3.5 px-4">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {healEvents.map((h, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-400">
+                  <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500">
                       {new Date(h.timestamp).toLocaleString()}
                     </td>
-                    <td className="py-3 px-4 font-medium text-slate-200 max-w-[240px]">
+                    <td className="py-3.5 px-4 font-semibold text-slate-900 max-w-[240px]">
                       {h.trigger_reason}
                     </td>
-                    <td className="py-3 px-4 text-slate-300 max-w-[260px] truncate">
+                    <td className="py-3.5 px-4 text-slate-600 max-w-[260px] truncate font-medium">
                       {h.proposed_fix_summary || 'Automatic selector update'}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono capitalize ${
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-bold capitalize ${
                           h.status === 'completed'
-                            ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : h.status === 'pending_review'
-                            ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                            : 'bg-rose-950 text-rose-300 border border-rose-800'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
                         }`}
                       >
                         {h.status.replace('_', ' ')}

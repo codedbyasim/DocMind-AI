@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   AlertCircle,
   FileText,
-  Filter,
 } from 'lucide-react';
 import NoticeBanner from '../components/NoticeBanner';
 import { useAuth } from '../context/AuthContext';
@@ -166,16 +165,16 @@ export default function AdminScraperPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Scraper Studio</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Scraper Studio</h1>
+          <p className="text-sm text-slate-500 mt-1 font-normal">
             Configure target documentation URLs, run Bright Data scrapers, and manage ingested pages.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleReindex}
             disabled={reindexing}
-            className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-medium transition-all flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-all shadow-2xs flex items-center gap-2"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${reindexing ? 'animate-spin' : ''}`} />
             <span>Refresh Index</span>
@@ -183,9 +182,9 @@ export default function AdminScraperPage() {
           <button
             onClick={handleRunScraper}
             disabled={running}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition-all flex items-center gap-2 shadow-sm shadow-cyan-600/20"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-sm shadow-blue-500/20"
           >
-            <Play className={`w-3.5 h-3.5 ${running ? 'animate-spin' : ''}`} />
+            <Play className={`w-3.5 h-3.5 fill-current ${running ? 'animate-spin' : ''}`} />
             <span>{running ? 'Scraping...' : 'Run Scraper Now'}</span>
           </button>
         </div>
@@ -194,16 +193,16 @@ export default function AdminScraperPage() {
       <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
 
       {/* Scraper Configuration Card */}
-      <div className="rounded-xl bg-slate-900/60 border border-slate-800/80 p-5 backdrop-blur-sm">
-        <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-          <Globe className="w-4 h-4 text-cyan-400" />
+      <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
+        <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <Globe className="w-4 h-4 text-blue-600" />
           <span>Documentation Source & Collector</span>
         </h2>
 
         <form onSubmit={handleCreateScraper} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Target Documentation URL
               </label>
               <input
@@ -211,13 +210,13 @@ export default function AdminScraperPage() {
                 value={targetUrl}
                 onChange={(e) => setTargetUrl(e.target.value)}
                 placeholder="https://docs.example.com"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-slate-100 placeholder-slate-500 focus:border-cyan-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-medium"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Active Collector ID
               </label>
               <input
@@ -225,13 +224,13 @@ export default function AdminScraperPage() {
                 value={collectorId}
                 onChange={(e) => setCollectorId(e.target.value)}
                 placeholder="c_..."
-                className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-slate-100 placeholder-slate-500 focus:border-cyan-500 outline-none"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-medium"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
               Scraper Description
             </label>
             <input
@@ -239,20 +238,20 @@ export default function AdminScraperPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description of documentation structure"
-              className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:border-cyan-500 outline-none"
+              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-medium"
             />
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-[11px] text-slate-500">
+            <span className="text-xs text-slate-400 font-medium">
               Creates an AI-powered documentation scraper on Bright Data Cloud.
             </span>
             <button
               type="submit"
               disabled={creating}
-              className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-all flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all flex items-center gap-2 border border-slate-200 shadow-2xs"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4" />
               <span>{creating ? 'Creating...' : 'Create New Collector'}</span>
             </button>
           </div>
@@ -260,34 +259,34 @@ export default function AdminScraperPage() {
       </div>
 
       {/* Ingested Pages Section */}
-      <div className="rounded-xl bg-slate-900/50 border border-slate-800/80 p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <div className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
           <div>
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <FileText className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-blue-600" />
               <span>Ingested Documentation Pages ({pages.length})</span>
             </h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Pages scraped from target documentation and indexed in vector storage.
             </p>
           </div>
 
-          {/* Search and Filters */}
-          <div className="flex items-center gap-2">
+          {/* Search & Status Filter */}
+          <div className="flex items-center gap-2.5">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search pages..."
-                className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:border-cyan-500 outline-none w-44 sm:w-56"
+                className="pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-500 outline-none w-48 sm:w-60 font-medium transition-all"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 outline-none"
+              className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 transition-all"
             >
               <option value="all">All Pages</option>
               <option value="valid">Valid Only</option>
@@ -298,60 +297,60 @@ export default function AdminScraperPage() {
 
         {/* Pages Table */}
         {pagesLoading ? (
-          <div className="py-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-            <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
+          <div className="py-12 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+            <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
             <span>Loading scraped pages...</span>
           </div>
         ) : filteredPages.length === 0 ? (
-          <div className="py-12 text-center text-xs text-slate-500">
+          <div className="py-12 text-center text-xs text-slate-400">
             No documentation pages found matching your filters.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-800/80">
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-medium">
-                  <th className="py-3 px-4">Title & Section</th>
-                  <th className="py-3 px-4">Source URL</th>
-                  <th className="py-3 px-4">Content Size</th>
-                  <th className="py-3 px-4">Validation</th>
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-500 font-bold">
+                  <th className="py-3.5 px-4">Title & Section</th>
+                  <th className="py-3.5 px-4">Source URL</th>
+                  <th className="py-3.5 px-4">Content Size</th>
+                  <th className="py-3.5 px-4">Validation</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {filteredPages.map((page, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-4 font-medium text-slate-200">
-                      <div className="truncate max-w-[260px]">{page.title || 'Untitled'}</div>
+                  <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">
+                      <div className="truncate max-w-[280px]">{page.title || 'Untitled'}</div>
                       {page.section_headings && page.section_headings.length > 0 && (
-                        <div className="text-[10px] text-slate-500 truncate max-w-[260px]">
+                        <div className="text-[11px] text-slate-400 font-normal truncate max-w-[280px]">
                           {page.section_headings.join(' › ')}
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-4 font-mono text-[11px]">
+                    <td className="py-3.5 px-4 font-mono text-[11px]">
                       <a
                         href={page.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1 max-w-[240px] truncate"
+                        className="text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 max-w-[240px] truncate font-medium"
                       >
                         <span className="truncate">{page.url}</span>
-                        <ExternalLink className="w-3 h-3 shrink-0 text-slate-500" />
+                        <ExternalLink className="w-3 h-3 shrink-0 text-slate-400" />
                       </a>
                     </td>
-                    <td className="py-3 px-4 text-slate-400 font-mono">
+                    <td className="py-3.5 px-4 text-slate-500 font-mono">
                       {page.content_length ? `${page.content_length} chars` : '—'}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       {page.is_valid ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Valid</span>
                         </span>
                       ) : (
                         <span
                           title={page.validation_errors?.join(', ') || 'Validation error'}
-                          className="inline-flex items-center gap-1 text-[11px] text-rose-400 font-medium"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 text-[11px] font-semibold border border-rose-200"
                         >
                           <AlertCircle className="w-3.5 h-3.5" />
                           <span>Rejected</span>

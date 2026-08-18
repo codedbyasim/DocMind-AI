@@ -6,24 +6,24 @@ export default function NoticeBanner({ notice, onDismiss }) {
 
   const types = {
     success: {
-      bg: 'bg-emerald-950/50 border-emerald-800/80 text-emerald-200',
+      bg: 'bg-emerald-50 border-emerald-200 text-emerald-900',
       icon: CheckCircle2,
-      iconColor: 'text-emerald-400',
+      iconColor: 'text-emerald-600',
     },
     error: {
-      bg: 'bg-rose-950/50 border-rose-800/80 text-rose-200',
+      bg: 'bg-rose-50 border-rose-200 text-rose-900',
       icon: AlertCircle,
-      iconColor: 'text-rose-400',
+      iconColor: 'text-rose-600',
     },
     warning: {
-      bg: 'bg-amber-950/50 border-amber-800/80 text-amber-200',
+      bg: 'bg-amber-50 border-amber-200 text-amber-900',
       icon: AlertCircle,
-      iconColor: 'text-amber-400',
+      iconColor: 'text-amber-600',
     },
     info: {
-      bg: 'bg-sky-950/50 border-sky-800/80 text-sky-200',
+      bg: 'bg-blue-50 border-blue-200 text-blue-900',
       icon: Info,
-      iconColor: 'text-sky-400',
+      iconColor: 'text-blue-600',
     },
   };
 
@@ -32,19 +32,19 @@ export default function NoticeBanner({ notice, onDismiss }) {
 
   return (
     <div
-      className={`rounded-xl border p-3.5 mb-6 text-xs flex items-center justify-between shadow-sm animate-fadeIn ${current.bg}`}
+      className={`rounded-xl border p-4 mb-6 text-xs flex items-center justify-between shadow-sm animate-fadeIn ${current.bg}`}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <Icon className={`w-4 h-4 shrink-0 ${current.iconColor}`} />
-        <span className="font-medium">{notice.message}</span>
+        <span className="font-medium leading-relaxed">{notice.message}</span>
       </div>
       {onDismiss && (
         <button
           onClick={onDismiss}
-          className="p-1 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
+          className="p-1 hover:bg-black/5 rounded-lg transition-colors text-slate-500 hover:text-slate-900"
           title="Dismiss notice"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
       )}
     </div>
