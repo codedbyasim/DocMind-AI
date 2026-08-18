@@ -1,0 +1,21 @@
+# Core Web Framework & Server
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+
+# Rate Limiting & Security
+slowapi
+
+# Vector DB & Embeddings
+chromadb
+tiktoken
+
+# LLM & AI Clients
+openai
+
+# Testing & Utilities
+pytest
+pytest-asyncio

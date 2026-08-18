@@ -1,0 +1,1 @@
+"""DocMind test suite."""
