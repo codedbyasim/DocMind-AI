@@ -187,21 +187,24 @@ export default function App() {
 
   const fetchHealth = async () => {
     try {
-      const res = await fetch('/api/admin/health', { headers: getAuthHeaders() });
+      const endpoint = (isAuthenticated && authToken) ? '/api/admin/health' : '/api/health';
+      const headers = (isAuthenticated && authToken) ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+      const res = await fetch(endpoint, { headers });
       if (res.ok) {
         const data = await res.json();
         setHealth(data);
-      } else {
-        const basicRes = await fetch('/api/health');
-        if (basicRes.ok) {
-          const basicData = await basicRes.json();
-          setHealth(basicData);
+      } else if (endpoint === '/api/admin/health') {
+        checkAuthResponse(res);
+        const fallbackRes = await fetch('/api/health');
+        if (fallbackRes.ok) {
+          setHealth(await fallbackRes.json());
         }
       }
     } catch (err) {
       console.warn('Backend API currently offline:', err);
     }
   };
+
 
   const fetchHealEvents = async () => {
     setHealsLoading(true);

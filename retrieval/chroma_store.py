@@ -32,14 +32,16 @@ class ChromaVectorStore(BaseVectorStore):
 
     def _get_collection(self):
         if self._collection is None:
+            os.environ["ANONYMIZED_TELEMETRY"] = "False"
             import chromadb
             from chromadb.config import Settings as ChromaSettings
 
             Path(self.persist_dir).mkdir(parents=True, exist_ok=True)
             self._client = chromadb.PersistentClient(
                 path=self.persist_dir,
-                settings=ChromaSettings(anonymized_telemetry=False),
+                settings=ChromaSettings(anonymized_telemetry=False, is_persistent=True),
             )
+
             self._collection = self._client.get_or_create_collection(
                 name=self.collection_name,
                 metadata={"hnsw:space": "cosine"},
