@@ -1,53 +1,201 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
-  Sparkles,
-  BookOpen,
-  ShieldAlert,
-  CheckCircle2,
+  Activity,
   AlertCircle,
-  RefreshCw,
-  Send,
-  ExternalLink,
-  Terminal,
-  Play,
-  PlusCircle,
-  Database,
-  Layers,
-  Cpu,
-  Search,
-  Check,
-  X,
   AlertTriangle,
-  History,
-  Globe,
-  Sliders,
+  ArrowRight,
+  Bot,
+  Check,
+  CheckCircle2,
   ChevronRight,
-  Info
+  Clock,
+  Code2,
+  Copy,
+  Database,
+  ExternalLink,
+  FileCode,
+  FileSpreadsheet,
+  FileText,
+  Globe,
+  Layers,
+  Lock,
+  LogOut,
+  Play,
+  Plus,
+  RefreshCw,
+  Search,
+  Send,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Sliders,
+  Sparkles,
+  Terminal,
+  Trash2,
+  User,
+  Wrench,
+  Zap,
 } from 'lucide-react';
 
+/**
+ * Reusable Code Block with Syntax Styling, Language Badge, and One-Click Copy
+ */
+const CodeBlock = ({ inline, className, children, ...props }) => {
+  const [copied, setCopied] = useState(false);
+  const match = /language-(\w+)/.exec(className || '');
+  const language = match ? match[1] : '';
+  const codeString = String(children).replace(/\n$/, '');
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeString);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (inline) {
+    return (
+      <code
+        className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-indigo-700 font-mono text-xs font-semibold"
+        {...props}
+      >
+        {children}
+      </code>
+    );
+  }
+
+  return (
+    <div className="relative my-3 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 shadow-md">
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-950/80 border-b border-slate-800 text-[11px] font-mono text-slate-400">
+        <span className="uppercase tracking-wider font-semibold text-slate-300">
+          {language || 'code'}
+        </span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+          title="Copy code"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-emerald-400 font-sans font-medium">Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              <span className="font-sans">Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+      <div className="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-slate-100">
+        <pre className="!bg-transparent !p-0 !m-0 font-mono">
+          <code className={className} {...props}>
+            {children}
+          </code>
+        </pre>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Formatted Markdown Renderer for Assistant Answers
+ */
+const FormattedMarkdown = ({ content }) => {
+  return (
+    <div className="markdown-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code: CodeBlock,
+          h1: ({ children }) => (
+            <h1 className="text-lg font-bold text-slate-900 mt-4 mb-2 pb-1 border-b border-slate-200">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-base font-bold text-slate-900 mt-3 mb-1.5 text-slate-800">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-sm font-bold text-slate-900 mt-2.5 mb-1">{children}</h3>
+          ),
+          p: ({ children }) => (
+            <p className="leading-relaxed my-2 text-slate-700">{children}</p>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc pl-5 my-2 space-y-1 text-slate-700">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal pl-5 my-2 space-y-1 text-slate-700">{children}</ol>
+          ),
+          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-3 rounded-lg border border-slate-200 shadow-sm">
+              <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
+                {children}
+              </table>
+            </div>
+          ),
+          th: ({ children }) => (
+            <th className="bg-slate-100 px-3.5 py-2.5 font-semibold text-slate-800 border-b border-slate-200">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="px-3.5 py-2 border-b border-slate-100 text-slate-700">{children}</td>
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-indigo-500 bg-indigo-50/70 px-3.5 py-2.5 rounded-r-lg my-2.5 text-slate-700 italic text-xs">
+              {children}
+            </blockquote>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2 font-medium"
+            >
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+};
+
 export default function App() {
-  // Navigation
+  // Navigation State
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'admin'
+  const [adminSubTab, setAdminSubTab] = useState('overview'); // 'overview' | 'scraper' | 'pages' | 'healing' | 'logs'
 
-  // Chat State
-  const [sessionId, setSessionId] = useState(() => 'sess_' + Math.random().toString(36).substring(2, 9));
-  const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState([]);
+  // Chat Engine State
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content:
+        'Hello! I am **DocMind**, your AI documentation assistant. Ask me anything about the indexed documentation, and I will generate grounded answers with direct source citations.',
+      grounded: true,
+    },
+  ]);
+  const [inputQuery, setInputQuery] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState(() => 'sess_' + Math.random().toString(36).substring(2, 9));
+  const messagesEndRef = useRef(null);
 
-  // System & Health State
-
-  const [health, setHealth] = useState(null);
-  const [adminState, setAdminState] = useState({
-    target_docs_url: 'https://docs.litellm.ai',
-    active_collector_id: '',
-  });
-
-  // Admin Form State
+  // Scraper Studio Form State
   const [targetUrl, setTargetUrl] = useState('https://docs.litellm.ai');
   const [description, setDescription] = useState('Sitemap scraper for documentation pages');
   const [collectorId, setCollectorId] = useState('');
-  // Phase 6: Admin Authentication & Token State (SRS §5.1, §2.2)
+
+  // Admin Authentication & Session State
   const [authToken, setAuthToken] = useState(() => localStorage.getItem('docmind_admin_token') || '');
   const [authUsername, setAuthUsername] = useState(() => localStorage.getItem('docmind_admin_user') || 'admin');
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('docmind_admin_token')));
@@ -56,62 +204,86 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
 
-
-
-  // Scraper Actions & Results
+  // Scraper Execution & Ingestion State
   const [creatingScraper, setCreatingScraper] = useState(false);
   const [runningScraper, setRunningScraper] = useState(false);
   const [reindexing, setReindexing] = useState(false);
-  const [actionNotice, setActionNotice] = useState(null); // { type: 'success' | 'error' | 'info', message: string }
   const [scrapedPages, setScrapedPages] = useState([]);
-  const [pagesLoading, setPagesLoading] = useState(false);
-  const [pageFilter, setPageFilter] = useState('all'); // 'all' | 'valid' | 'invalid'
-  const [pageSearch, setPageSearch] = useState('');
   const [scrapeRuns, setScrapeRuns] = useState([]);
+  const [pagesLoading, setPagesLoading] = useState(false);
   const [runsLoading, setRunsLoading] = useState(false);
 
-  // Phase 2: Indexing Progress State (SRS §3.2)
-  const [indexingProgress, setIndexingProgress] = useState({
-    status: 'idle',
-    processed_pages: 0,
-    total_pages: 0,
-    processed_chunks: 0,
-    total_chunks: 0,
-    current_page_title: null,
-    last_indexed_at: null,
-  });
-
-  // Phase 5: Self-Healing Monitor & Recovery State (FR-501 to FR-505 & SRS §3.5)
+  // Self-Healing & Health State
+  const [health, setHealth] = useState(null);
   const [healEvents, setHealEvents] = useState([]);
   const [healsLoading, setHealsLoading] = useState(false);
-  const [manualHealDesc, setManualHealDesc] = useState('');
   const [triggeringHeal, setTriggeringHeal] = useState(false);
+  const [manualHealDesc, setManualHealDesc] = useState('');
+  const [approvingHeal, setApprovingHeal] = useState(false);
+  const [rejectingHeal, setRejectingHeal] = useState(false);
   const [simulatingDegraded, setSimulatingDegraded] = useState(false);
-  const [healingActionId, setHealingActionId] = useState(null);
 
-  // Load initial data
+  // Admin State & Metrics
+  const [adminState, setAdminState] = useState(null);
+  const [indexingProgress, setIndexingProgress] = useState({
+    status: 'idle',
+    total_pages: 0,
+    indexed_pages: 0,
+    total_chunks: 0,
+    progress_pct: 100,
+    current_page_title: '',
+    error: null,
+  });
+
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLogsLoading, setAuditLogsLoading] = useState(false);
+
+  // UI Search & Filter States
+  const [searchFilter, setSearchFilter] = useState('');
+  const [pageStatusFilter, setPageStatusFilter] = useState('all'); // 'all' | 'valid' | 'flagged'
+  const [actionNotice, setActionNotice] = useState(null);
+
+  // Auto-scroll chat
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, chatLoading]);
+
+  // Initial Data Load
   useEffect(() => {
     fetchHealth();
-    if (isAuthenticated) {
+  }, [isAuthenticated, authToken]);
+
+  useEffect(() => {
+    if (activeTab === 'admin' && isAuthenticated) {
       fetchAdminState();
-      fetchScrapeRuns();
-      fetchLatestPages();
       fetchIndexingProgress();
+      fetchLatestPages();
+      fetchScrapeRuns();
       fetchHealEvents();
+      fetchAuditLogs();
     }
-  }, [isAuthenticated]);
+  }, [activeTab, isAuthenticated]);
 
   // Poll indexing progress when active
   useEffect(() => {
+    let interval = null;
     if (indexingProgress.status === 'indexing' && isAuthenticated) {
-      const timer = setInterval(() => {
+      interval = setInterval(() => {
         fetchIndexingProgress();
         fetchHealth();
       }, 1500);
-      return () => clearInterval(timer);
     }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [indexingProgress.status, isAuthenticated]);
 
+  // Auth Header Helper
   const getAuthHeaders = () => {
     const headers = { 'Content-Type': 'application/json' };
     if (authToken) {
@@ -132,7 +304,7 @@ export default function App() {
     return true;
   };
 
-
+  // Admin Login Handler
   const handleAdminLogin = async (e) => {
     e?.preventDefault();
     if (!loginUsername.trim() || !loginPassword.trim() || loginLoading) return;
@@ -167,6 +339,7 @@ export default function App() {
     }
   };
 
+  // Admin Logout Handler
   const handleAdminLogout = async () => {
     try {
       await fetch('/api/admin/logout', {
@@ -181,15 +354,15 @@ export default function App() {
       setAuthToken('');
       setAuthUsername('');
       setIsAuthenticated(false);
-      setActionNotice({ type: 'info', message: 'Admin signed out successfully.' });
+      setActionNotice({ type: 'info', message: 'Signed out of administrator session.' });
     }
   };
 
-
+  // Health Polling
   const fetchHealth = async () => {
     try {
-      const endpoint = (isAuthenticated && authToken) ? '/api/admin/health' : '/api/health';
-      const headers = (isAuthenticated && authToken) ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+      const endpoint = isAuthenticated && authToken ? '/api/admin/health' : '/api/health';
+      const headers = isAuthenticated && authToken ? getAuthHeaders() : { 'Content-Type': 'application/json' };
       const res = await fetch(endpoint, { headers });
       if (res.ok) {
         const data = await res.json();
@@ -202,10 +375,9 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.warn('Backend API currently offline:', err);
+      console.warn('Backend API currently unreachable:', err);
     }
   };
-
 
   const fetchHealEvents = async () => {
     setHealsLoading(true);
@@ -223,12 +395,11 @@ export default function App() {
     }
   };
 
-
   const handleTriggerManualHeal = async (e) => {
     e?.preventDefault();
     if (!manualHealDesc.trim() || triggeringHeal) return;
     setTriggeringHeal(true);
-    setActionNotice({ type: 'info', message: 'Invoking bdata scraper heal with Bright Data AI...' });
+    setActionNotice({ type: 'info', message: 'Triggering AI Scraper Repair via Bright Data...' });
 
     try {
       const res = await fetch('/api/admin/heal/trigger', {
@@ -239,103 +410,107 @@ export default function App() {
           description: manualHealDesc.trim(),
         }),
       });
+
+      if (!checkAuthResponse(res)) return;
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(data.detail || 'Failed to trigger scraper repair');
 
       setActionNotice({
         type: 'success',
-        message: data.message || `Heal event triggered successfully. Fix proposed: ${data.heal_event?.fix_summary}`,
+        message: `Scraper repair event registered. Proposed Fix: ${data.proposed_fix || 'Pending review'}`,
       });
       setManualHealDesc('');
-      fetchHealEvents();
       fetchHealth();
+      fetchHealEvents();
     } catch (err) {
-      setActionNotice({ type: 'error', message: `Heal invocation failed: ${err.message}` });
+      setActionNotice({ type: 'error', message: err.message });
     } finally {
       setTriggeringHeal(false);
     }
   };
 
   const handleApproveHeal = async (healId) => {
-    setHealingActionId(healId);
-    setActionNotice({ type: 'info', message: 'Approving heal fix and re-running scraper + re-indexing (FR-504)...' });
+    if (approvingHeal) return;
+    setApprovingHeal(true);
+    setActionNotice({ type: 'info', message: 'Approving AI repair fix, re-scraping & re-indexing vector store...' });
 
     try {
       const res = await fetch(`/api/admin/heal/${healId}/approve`, {
         method: 'POST',
         headers: getAuthHeaders(),
       });
+
+      if (!checkAuthResponse(res)) return;
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(data.detail || 'Approval failed');
 
       setActionNotice({
         type: 'success',
-        message: data.message || 'Heal approved and knowledge base successfully re-indexed!',
+        message: `Repair approved! Re-indexed ${data.reindexed_pages || 0} pages into knowledge base. System restored to HEALTHY.`,
       });
-      fetchHealEvents();
-      fetchScrapeRuns();
-      fetchLatestPages();
       fetchHealth();
+      fetchHealEvents();
+      fetchLatestPages();
     } catch (err) {
-      setActionNotice({ type: 'error', message: `Heal approval failed: ${err.message}` });
+      setActionNotice({ type: 'error', message: err.message });
     } finally {
-      setHealingActionId(null);
+      setApprovingHeal(false);
     }
   };
 
   const handleRejectHeal = async (healId) => {
-    setHealingActionId(healId);
-    setActionNotice({ type: 'info', message: 'Rejecting proposed fix (FR-505)...' });
+    if (rejectingHeal) return;
+    setRejectingHeal(true);
+    setActionNotice({ type: 'info', message: 'Rejecting proposed repair fix...' });
 
     try {
       const res = await fetch(`/api/admin/heal/${healId}/reject`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ feedback: 'Admin requested alternative fix' }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
-      setActionNotice({
-        type: 'info',
-        message: data.message || 'Heal fix rejected. You can submit an adjusted description.',
-      });
-      fetchHealEvents();
+      if (!checkAuthResponse(res)) return;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Rejection failed');
+
+      setActionNotice({ type: 'info', message: 'Proposed repair fix rejected.' });
       fetchHealth();
+      fetchHealEvents();
     } catch (err) {
-      setActionNotice({ type: 'error', message: `Heal rejection failed: ${err.message}` });
+      setActionNotice({ type: 'error', message: err.message });
     } finally {
-      setHealingActionId(null);
+      setRejectingHeal(false);
     }
   };
 
   const handleSimulateDegraded = async () => {
     if (simulatingDegraded) return;
     setSimulatingDegraded(true);
-    setActionNotice({ type: 'info', message: 'Simulating degraded scrape breakage (Demo Mode)...' });
+    setActionNotice({ type: 'warning', message: 'Injecting simulated site breakage (1 page returned)...' });
 
     try {
       const res = await fetch('/api/admin/heal/simulate-degraded', {
         method: 'POST',
         headers: getAuthHeaders(),
       });
+
+      if (!checkAuthResponse(res)) return;
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(data.detail || 'Simulation failed');
 
       setActionNotice({
-        type: 'success',
-        message: data.message || 'Degraded run simulated! Health flipped to DEGRADED and heal auto-triggered.',
+        type: 'warning',
+        message: `Simulated breakage injected! System health changed to DEGRADED. Automated AI repair triggered.`,
       });
+      fetchHealth();
       fetchHealEvents();
       fetchScrapeRuns();
-      fetchHealth();
     } catch (err) {
-      setActionNotice({ type: 'error', message: `Simulation failed: ${err.message}` });
+      setActionNotice({ type: 'error', message: err.message });
     } finally {
       setSimulatingDegraded(false);
     }
   };
-
 
   const fetchAdminState = async () => {
     try {
@@ -397,45 +572,55 @@ export default function App() {
     }
   };
 
+  const fetchAuditLogs = async () => {
+    setAuditLogsLoading(true);
+    try {
+      const res = await fetch('/api/admin/audit-logs?limit=25', { headers: getAuthHeaders() });
+      if (!checkAuthResponse(res)) return;
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch audit logs:', err);
+    } finally {
+      setAuditLogsLoading(false);
+    }
+  };
 
   const handleDeltaReindex = async () => {
     if (reindexing) return;
     setReindexing(true);
-    setActionNotice({ type: 'info', message: 'Triggering Delta Re-indexing pipeline (FR-204)...' });
+    setActionNotice({ type: 'info', message: 'Triggering Knowledge Base Delta Re-Indexing...' });
 
     try {
       const res = await fetch('/api/admin/indexing/reindex', {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ force_full: false }),
       });
+
+      if (!checkAuthResponse(res)) return;
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(data.detail || 'Reindexing failed');
 
       setActionNotice({
         type: 'success',
-        message: data.message || `Re-indexed ${data.indexed_pages} pages into ${data.indexed_chunks} chunks.`,
+        message: `Delta re-indexing initiated. Reindexed ${data.reindexed_pages || 0} pages.`,
       });
       fetchIndexingProgress();
       fetchHealth();
     } catch (err) {
-      setActionNotice({
-        type: 'error',
-        message: `Delta re-indexing failed: ${err.message}`,
-      });
+      setActionNotice({ type: 'error', message: err.message });
     } finally {
       setReindexing(false);
     }
   };
 
-
-  // --- Handlers ---
   const handleCreateScraper = async (e) => {
-    e.preventDefault();
-    if (!targetUrl.trim() || creatingScraper) return;
-
+    e?.preventDefault();
+    if (creatingScraper) return;
     setCreatingScraper(true);
-    setActionNotice({ type: 'info', message: 'Creating Sitemap Scraper via Bright Data CLI (bdata scraper create)...' });
+    setActionNotice({ type: 'info', message: 'Creating Sitemap Scraper with Bright Data Studio...' });
 
     try {
       const res = await fetch('/api/admin/scraper/create', {
@@ -443,27 +628,23 @@ export default function App() {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           url: targetUrl.trim(),
-          description: description.trim() || undefined,
+          description: description.trim(),
         }),
       });
 
+      if (!checkAuthResponse(res)) return;
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(data.detail || 'Failed to create scraper');
 
       setCollectorId(data.collector_id);
       setActionNotice({
         type: 'success',
-        message: `Collector created successfully! Collector ID: ${data.collector_id}`,
+        message: `Scraper created successfully! Collector ID: ${data.collector_id}`,
       });
       fetchAdminState();
       fetchHealth();
     } catch (err) {
-      setActionNotice({
-        type: 'error',
-        message: `Failed to create scraper: ${err.message}`,
-      });
+      setActionNotice({ type: 'error', message: err.message });
     } finally {
       setCreatingScraper(false);
     }
@@ -471,63 +652,54 @@ export default function App() {
 
   const handleRunScraper = async () => {
     if (runningScraper) return;
-
     setRunningScraper(true);
-    setActionNotice({
-      type: 'info',
-      message: 'Running Bright Data scraper (bdata scraper run) & ingesting documentation...',
-    });
+    setActionNotice({ type: 'info', message: 'Executing scraper on Bright Data cloud & ingesting pages...' });
 
     try {
       const res = await fetch('/api/admin/scraper/run', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          url: targetUrl.trim() || undefined,
           collector_id: collectorId.trim() || undefined,
         }),
       });
 
+      if (!checkAuthResponse(res)) return;
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(data.detail || 'Failed to execute scraper run');
 
-      if (data.pages) {
-        setScrapedPages(data.pages);
-      }
-
-      if (data.success) {
-        setActionNotice({
-          type: 'success',
-          message: `Scrape completed successfully! Validated ${data.valid_count} pages (${data.failed_count} flagged). Run ID: ${data.scrape_run.id}`,
-        });
-      } else {
-        setActionNotice({
-          type: 'error',
-          message: `Scrape run completed with status '${data.scrape_run.status}': ${data.scrape_run.error_summary || 'Unknown error'}`,
-        });
-      }
-
+      setActionNotice({
+        type: 'success',
+        message: `Scrape completed! ${data.valid_pages} valid pages indexed (${data.flagged_pages} flagged).`,
+      });
+      fetchLatestPages();
       fetchScrapeRuns();
       fetchHealth();
     } catch (err) {
-      setActionNotice({
-        type: 'error',
-        message: `Scraper execution failed: ${err.message}`,
-      });
+      setActionNotice({ type: 'error', message: err.message });
     } finally {
       setRunningScraper(false);
     }
   };
 
+  // Real-Time Token Streaming Chat Handler
   const handleSendChat = async (e) => {
-    e.preventDefault();
-    if (!query.trim() || chatLoading) return;
+    e?.preventDefault();
+    const query = inputQuery.trim();
+    if (!query || chatLoading) return;
 
-    const userMessage = { role: 'user', content: query };
-    setMessages((prev) => [...prev, userMessage]);
-    setQuery('');
+    // Add user message immediately
+    const userMsg = { role: 'user', content: query };
+    const initialAssistantMsg = {
+      role: 'assistant',
+      content: '',
+      citations: [],
+      grounded: true,
+      streaming: true,
+    };
+
+    setMessages((prev) => [...prev, userMsg, initialAssistantMsg]);
+    setInputQuery('');
     setChatLoading(true);
 
     try {
@@ -535,1206 +707,1279 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: userMessage.content,
-          session_id: sessionId,
+          query: query,
+          session_id: activeSessionId,
         }),
       });
 
-      if (!res.ok || !res.body) {
-        // Fallback to non-streaming endpoint
-        const fallbackRes = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: userMessage.content, session_id: sessionId }),
-        });
-        const data = await fallbackRes.json();
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: data.answer,
-            citations: data.citations || [],
-            latency_ms: data.latency_ms,
-            grounded: data.grounded,
-          },
-        ]);
-        return;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Chat request failed (HTTP ${res.status})`);
       }
 
-      // Add placeholder assistant message for streaming tokens
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: '',
-          citations: [],
-          grounded: true,
-        },
-      ]);
-
       const reader = res.body.getReader();
-      const decoder = new TextDecoder();
+      const decoder = new TextDecoder('utf-8');
+      let accumulatedAnswer = '';
+      let receivedCitations = [];
+      let isGrounded = true;
+      let latency = 0;
       let buffer = '';
 
       while (true) {
-        const { value, done } = await reader.read();
+        const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n\n');
-        buffer = lines.pop(); // Keep partial chunk
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
           const trimmed = line.trim();
-          if (!trimmed) continue;
+          if (!trimmed.startsWith('data: ')) continue;
+          const jsonStr = trimmed.substring(6);
+
           try {
-            const eventData = JSON.parse(trimmed);
-            if (eventData.type === 'token') {
-              setMessages((prev) => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                if (last && last.role === 'assistant') {
-                  last.content += eventData.delta;
-                }
-                return updated;
-              });
-            } else if (eventData.type === 'citations') {
-              setMessages((prev) => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                if (last && last.role === 'assistant') {
-                  last.citations = eventData.citations;
-                }
-                return updated;
-              });
-            } else if (eventData.type === 'done') {
-              setMessages((prev) => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                if (last && last.role === 'assistant') {
-                  last.content = eventData.answer;
-                  last.citations = eventData.citations || last.citations;
-                  last.latency_ms = eventData.latency_ms;
-                  last.grounded = eventData.grounded;
-                }
-                return updated;
-              });
+            const event = JSON.parse(jsonStr);
+
+            if (event.type === 'citations') {
+              receivedCitations = event.citations || [];
+            } else if (event.type === 'token') {
+              accumulatedAnswer += event.delta;
+            } else if (event.type === 'done') {
+              accumulatedAnswer = event.answer || accumulatedAnswer;
+              receivedCitations = event.citations || receivedCitations;
+              isGrounded = event.grounded ?? true;
+              latency = event.latency_ms || 0;
             }
-          } catch (pErr) {
-            // Ignore parse errors on partial frames
+
+            // Update active streaming message
+            setMessages((prev) => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                updated[lastIdx] = {
+                  ...updated[lastIdx],
+                  content: accumulatedAnswer,
+                  citations: receivedCitations,
+                  grounded: isGrounded,
+                  latency_ms: latency,
+                  streaming: true,
+                };
+              }
+              return updated;
+            });
+          } catch (e) {
+            console.warn('SSE parsing error:', e, jsonStr);
           }
         }
       }
+
+      // Finalize streaming
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+          updated[lastIdx] = {
+            ...updated[lastIdx],
+            streaming: false,
+          };
+        }
+        return updated;
+      });
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: '⚠️ Failed to reach the DocMind API. Please ensure the backend server is running.',
-          citations: [],
-          grounded: false,
-        },
-      ]);
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+          updated[lastIdx] = {
+            role: 'assistant',
+            content: `⚠️ Error retrieving answer: ${err.message}`,
+            grounded: false,
+            streaming: false,
+          };
+        }
+        return updated;
+      });
     } finally {
       setChatLoading(false);
     }
   };
 
-
   const handleClearChat = async () => {
     try {
-      await fetch(`/api/chat/history/${sessionId}`, { method: 'DELETE' });
-    } catch (err) {
-      console.warn('Failed to clear session on backend:', err);
+      await fetch(`/api/chat/history/${activeSessionId}`, { method: 'DELETE' });
+    } catch (e) {
+      console.warn('Session reset error:', e);
     }
-    setMessages([]);
-    setSessionId('sess_' + Math.random().toString(36).substring(2, 9));
+    const newSession = 'sess_' + Math.random().toString(36).substring(2, 9);
+    setActiveSessionId(newSession);
+    setMessages([
+      {
+        role: 'assistant',
+        content:
+          'Conversation reset! Ask me any question about the documentation, and I will search the indexed vector store for verified answers.',
+        grounded: true,
+      },
+    ]);
   };
 
-
-  // Filtered scraped pages
+  // Filtered pages list
   const filteredPages = scrapedPages.filter((page) => {
-    if (pageFilter === 'valid' && !page.is_valid) return false;
-    if (pageFilter === 'invalid' && page.is_valid) return false;
-    if (pageSearch.trim()) {
-      const q = pageSearch.toLowerCase();
-      const matchTitle = (page.title || '').toLowerCase().includes(q);
-      const matchUrl = (page.url || '').toLowerCase().includes(q);
-      const matchSection = (page.section || '').toLowerCase().includes(q);
-      if (!matchTitle && !matchUrl && !matchSection) return false;
-    }
-    return true;
+    const matchesSearch =
+      !searchFilter ||
+      page.title?.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      page.url?.toLowerCase().includes(searchFilter.toLowerCase());
+
+    if (pageStatusFilter === 'valid') return matchesSearch && page.is_valid;
+    if (pageStatusFilter === 'flagged') return matchesSearch && !page.is_valid;
+    return matchesSearch;
   });
 
+  const pendingHeal = healEvents.find((h) => h.status === 'pending_review');
+
   return (
-    <div className="flex flex-col w-screen min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-sky-500 selection:text-white">
-      {/* Top Navigation Bar */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-20 px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-tr from-sky-600 to-indigo-600 text-white rounded-xl shadow-lg shadow-sky-500/20">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold tracking-tight text-white">DocMind</h1>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-mono border border-sky-500/30">
-                Self-Healing RAG
-              </span>
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
+      {/* ──────────────── Top Navigation Header ──────────────── */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          {/* Brand Logo & Title */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+              <Bot className="w-6 h-6" />
             </div>
-            <p className="text-xs text-slate-400">Bright Data Scrape-Verse Hackathon</p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-lg tracking-tight text-slate-900">
+                  DocMind
+                </span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Documentation RAG
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 hidden sm:block">
+                Self-Healing AI Documentation Assistant
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* View Switcher Tabs */}
-        <div className="flex items-center gap-2 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
-              activeTab === 'chat'
-                ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            Chat Assistant
-          </button>
-          <button
-            onClick={() => setActiveTab('admin')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
-              activeTab === 'admin'
-                ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <Terminal className="w-3.5 h-3.5" />
-            Admin & Scraper
-          </button>
-        </div>
-
-        {/* Health status badge */}
-        <div className="hidden md:flex items-center gap-3">
-          {health && (
-            <div className="flex items-center gap-2 text-xs text-slate-300 bg-slate-900/90 px-3 py-1.5 rounded-full border border-slate-800 shadow-inner">
-              <span
-                className={`w-2 h-2 rounded-full ${
+          {/* Right Navigation & Status Indicators */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* System Health Badge */}
+            {health && (
+              <div
+                className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm ${
                   health.status === 'healthy'
-                    ? 'bg-emerald-400 animate-pulse'
-                    : health.status === 'healing'
-                    ? 'bg-amber-400 animate-spin'
-                    : 'bg-rose-400'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : health.status === 'degraded'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
                 }`}
-              />
-              <span className="capitalize font-medium">{health.status}</span>
-              <span className="text-slate-600">|</span>
-              <span className="text-slate-400 font-mono">{health.total_indexed_chunks} chunks</span>
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    health.status === 'healthy'
+                      ? 'bg-emerald-500'
+                      : health.status === 'degraded'
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }`}
+                />
+                <span className="capitalize">{health.status} System</span>
+                {health.total_indexed_pages > 0 && (
+                  <span className="text-slate-500 font-normal pl-1 border-l border-slate-300">
+                    {health.total_indexed_pages} docs ({health.total_indexed_chunks} chunks)
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Main Tabs */}
+            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === 'chat'
+                    ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span>Chat Assistant</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === 'admin'
+                    ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Admin Studio</span>
+                {pendingHeal && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                )}
+              </button>
             </div>
-          )}
+
+            {/* Admin Session Info */}
+            {isAuthenticated && (
+              <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-slate-200">
+                <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                  <User className="w-3.5 h-3.5 text-indigo-600" />
+                  {authUsername}
+                </span>
+                <button
+                  onClick={handleAdminLogout}
+                  title="Sign out"
+                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-rose-600 transition"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* Main Body */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* =========================================================================
-            TAB 1: END-USER CHAT ASSISTANT (PHASE 4 SRS §3.4)
-            ========================================================================= */}
-        {activeTab === 'chat' && (
-          <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-4 sm:p-6 overflow-hidden">
-            {/* Chat Session Header */}
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800/80 text-xs">
-              <div className="flex items-center gap-2 text-slate-400">
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                <span>Grounded RAG Assistant</span>
-                <span className="text-slate-600">|</span>
-                <span className="font-mono text-[11px] text-slate-500">Session: {sessionId}</span>
-              </div>
-              {messages.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleClearChat}
-                  className="px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs flex items-center gap-1.5 transition-colors"
-                  title="Clear conversation and start a new session"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>New Session</span>
-                </button>
-              )}
-            </div>
+      {/* ──────────────── Notification Banner ──────────────── */}
+      {actionNotice && (
+        <div
+          className={`border-b px-4 py-2.5 text-xs font-medium flex items-center justify-between transition-all ${
+            actionNotice.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : actionNotice.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-800'
+              : actionNotice.type === 'warning'
+              ? 'bg-amber-50 border-amber-200 text-amber-800'
+              : 'bg-indigo-50 border-indigo-200 text-indigo-800'
+          }`}
+        >
+          <div className="max-w-7xl mx-auto flex items-center gap-2 w-full">
+            {actionNotice.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+            {actionNotice.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+            {actionNotice.type === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />}
+            {actionNotice.type === 'info' && <RefreshCw className="w-4 h-4 text-indigo-600 shrink-0 animate-spin" />}
+            <span className="flex-1">{actionNotice.message}</span>
+            <button
+              onClick={() => setActionNotice(null)}
+              className="text-slate-400 hover:text-slate-700 text-xs px-2 py-0.5 rounded hover:bg-slate-200/50"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
-            {/* Message List */}
-            <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-thin scrollbar-thumb-slate-800">
+      {/* ──────────────── Main Content Area ──────────────── */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        {activeTab === 'chat' ? (
+          /* ════════════════════════════════════════════════════════════
+             CHAT INTERFACE VIEW
+             ════════════════════════════════════════════════════════════ */
+          <div className="max-w-4xl mx-auto flex flex-col h-[calc(100vh-10rem)] min-h-[500px]">
+            {/* Chat Messages Container */}
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1 pb-4">
               {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400">
-                  <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 mb-4 shadow-xl">
-                    <BookOpen className="w-10 h-10 text-sky-400" />
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                    <Bot className="w-8 h-8" />
                   </div>
-                  <h2 className="text-lg font-semibold text-slate-200">Ask a question about the documentation</h2>
-                  <p className="text-sm text-slate-400 max-w-md mt-1.5 leading-relaxed">
-                    Answers are strictly grounded in documentation scraped via Bright Data Scraper Studio, complete with clickable source citations.
+                  <h3 className="text-base font-bold text-slate-900 mb-1">
+                    Ask DocMind About Your Documentation
+                  </h3>
+                  <p className="text-xs text-slate-500 max-w-md">
+                    Answers are strictly generated from indexed pages with verified source citations.
                   </p>
-
-                  {/* Starter question pills */}
-                  <div className="flex flex-wrap gap-2 mt-6 justify-center max-w-xl">
-                    {[
-                      'How do I set up and start the LiteLLM proxy with Docker?',
-                      'How does LiteLLM map exceptions across providers?',
-                      'What are callbacks used for and how do I create one?',
-                      'How do I use the autorouter CLI for model routing?',
-                    ].map((sample, sIdx) => (
-                      <button
-                        key={sIdx}
-                        onClick={() => setQuery(sample)}
-                        className="text-xs bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-sky-300 px-3 py-2 rounded-lg transition-all text-left shadow-sm"
-                      >
-                        {sample}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               ) : (
                 messages.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                    className={`flex flex-col ${
+                      msg.role === 'user' ? 'items-end' : 'items-start'
+                    }`}
                   >
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3.5 text-sm leading-relaxed shadow-lg ${
-                        msg.role === 'user'
-                          ? 'bg-sky-600 text-white font-medium rounded-br-none'
-                          : msg.grounded === false
-                          ? 'bg-slate-900/95 border border-amber-800/60 text-amber-200 rounded-bl-none'
-                          : 'bg-slate-900/90 border border-slate-800 text-slate-200 rounded-bl-none'
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-
-                      {/* Citations block */}
-                      {msg.citations && msg.citations.length > 0 && (
-                        <div className="mt-3.5 pt-3 border-t border-slate-800/80 space-y-1.5">
-                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>Grounded Sources ({msg.citations.length}):</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {msg.citations.map((cit, cIdx) => (
-                              <a
-                                key={cIdx}
-                                href={cit.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                title={cit.section ? `${cit.title} > ${cit.section}` : cit.title}
-                                className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-sky-400 hover:text-sky-300 border border-slate-800 hover:border-sky-500/50 transition-all shadow-sm group"
-                              >
-                                <span className="font-medium truncate max-w-[220px]">
-                                  {cit.title} {cit.section && <span className="text-slate-500 font-normal">› {cit.section}</span>}
-                                </span>
-                                {cit.similarity_score !== undefined && (
-                                  <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                                    {Math.round(cit.similarity_score * 100)}%
-                                  </span>
-                                )}
-                                <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-sky-400 shrink-0" />
-                              </a>
-                            ))}
-                          </div>
+                    {/* User Message Bubble */}
+                    {msg.role === 'user' ? (
+                      <div className="max-w-[85%] sm:max-w-[75%] rounded-2xl rounded-tr-none px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-medium text-sm leading-relaxed shadow-sm">
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    ) : (
+                      /* Assistant Message Card */
+                      <div
+                        className={`max-w-[92%] sm:max-w-[85%] rounded-2xl rounded-tl-none p-5 text-sm leading-relaxed shadow-sm transition-all ${
+                          msg.grounded === false
+                            ? 'bg-amber-50/80 border border-amber-200 text-slate-800'
+                            : 'bg-white border border-slate-200 text-slate-800'
+                        }`}
+                      >
+                        {/* Assistant Header Badge */}
+                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 text-xs font-semibold text-slate-500">
+                          <Bot className="w-4 h-4 text-indigo-600" />
+                          <span className="text-slate-800">DocMind Assistant</span>
+                          {msg.grounded === false && (
+                            <span className="ml-auto text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                              Out of Domain
+                            </span>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    {msg.latency_ms && (
-                      <span className="text-[10px] text-slate-500 mt-1 px-1 font-mono">
-                        Latency: {Math.round(msg.latency_ms)}ms
-                      </span>
+
+                        {/* Rich Markdown Answer Content */}
+                        <FormattedMarkdown content={msg.content || '...'} />
+
+                        {/* Interactive Grounded Citations Chips */}
+                        {msg.citations && msg.citations.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Verified Source Citations ({msg.citations.length}):</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              {msg.citations.map((cit, cIdx) => (
+                                <a
+                                  key={cIdx}
+                                  href={cit.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  title={cit.section ? `${cit.title} › ${cit.section}` : cit.title}
+                                  className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50/80 text-indigo-700 hover:text-indigo-900 border border-slate-200 hover:border-indigo-300 transition shadow-sm group"
+                                >
+                                  <Globe className="w-3 h-3 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+                                  <span className="font-semibold truncate max-w-[200px]">
+                                    {cit.title}
+                                    {cit.section && (
+                                      <span className="text-slate-500 font-normal ml-1">
+                                        › {cit.section}
+                                      </span>
+                                    )}
+                                  </span>
+                                  {cit.similarity_score !== undefined && (
+                                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">
+                                      {Math.round(cit.similarity_score * 100)}% match
+                                    </span>
+                                  )}
+                                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Latency & Metadata Footer */}
+                        {msg.latency_ms && (
+                          <div className="mt-3 text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>Response generation time: {Math.round(msg.latency_ms)}ms</span>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))
               )}
 
-              {chatLoading && (
-                <div className="flex items-center gap-2.5 text-xs text-slate-400 bg-slate-900/80 px-4 py-3 rounded-xl max-w-xs border border-slate-800 shadow-md">
-                  <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
-                  <span>Searching docs & generating answer...</span>
+              {/* Streaming Indicator */}
+              {chatLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+                <div className="flex items-center gap-2.5 text-xs text-slate-600 bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm max-w-xs">
+                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
+                  <span>Searching vector index & streaming answer...</span>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
-            {/* Chat Input Form */}
-            <form onSubmit={handleSendChat} className="relative mt-auto">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask a question about the scraped docs (e.g. 'How do I configure provider retries?')..."
-                className="w-full px-4 py-3.5 pr-12 rounded-xl bg-slate-900/90 border border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none text-sm text-slate-100 placeholder-slate-500 transition-all shadow-xl"
-              />
-              <button
-                type="submit"
-                disabled={!query.trim() || chatLoading}
-                className="absolute right-2 top-2 p-2 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-40 disabled:hover:bg-sky-600 text-white transition-colors"
-                aria-label="Send question"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </main>
-        )}
+            {/* Quick Starter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto py-2">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider shrink-0">
+                Suggested:
+              </span>
+              {[
+                'How do I run the LiteLLM proxy with Docker?',
+                'What embedding models are supported?',
+                'How does load balancing work in LiteLLM?',
+              ].map((pill, pIdx) => (
+                <button
+                  key={pIdx}
+                  onClick={() => setInputQuery(pill)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-600 hover:text-indigo-700 font-medium whitespace-nowrap transition shadow-sm"
+                >
+                  {pill}
+                </button>
+              ))}
+            </div>
 
-
-        {/* =========================================================================
-            TAB 2: ADMIN PANEL & SCRAPER CONTROL (PHASE 1 & PHASE 6 SRS §3.1, §5.1)
-            ========================================================================= */}
-        {activeTab === 'admin' && !isAuthenticated && (
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex items-center justify-center max-w-md mx-auto w-full">
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-8 shadow-2xl w-full space-y-6">
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center mx-auto text-sky-400">
-                  <ShieldAlert className="w-6 h-6" />
-                </div>
-                <h2 className="text-xl font-bold text-white">Admin Authentication</h2>
-                <p className="text-xs text-slate-400">
-                  Sign in with administrator credentials or API key to access scraper management, self-healing controls, and system logs.
-                </p>
-              </div>
-
-              {loginError && (
-                <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleAdminLogin} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Admin Username
-                  </label>
-                  <input
-                    type="text"
-                    value={loginUsername}
-                    onChange={(e) => setLoginUsername(e.target.value)}
-                    placeholder="admin"
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Admin Password
-                  </label>
-                  <input
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:border-sky-500 outline-none"
-                    required
-                  />
-                </div>
-
+            {/* Chat Input Bar */}
+            <form onSubmit={handleSendChat} className="mt-1 relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={inputQuery}
+                  onChange={(e) => setInputQuery(e.target.value)}
+                  placeholder="Ask a question about the documentation..."
+                  className="w-full pl-4 pr-12 py-3.5 rounded-2xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 text-sm shadow-sm focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none transition"
+                  disabled={chatLoading}
+                />
                 <button
                   type="submit"
-                  disabled={loginLoading}
-                  className="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-lg shadow-sky-600/30 flex items-center justify-center gap-2"
+                  disabled={!inputQuery.trim() || chatLoading}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white transition shadow-sm"
+                  title="Send query"
                 >
-                  {loginLoading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Sliders className="w-4 h-4" />
-                  )}
-                  <span>Sign In to Admin Panel</span>
+                  <Send className="w-4 h-4" />
                 </button>
-              </form>
-
-              <div className="pt-3 border-t border-slate-800 text-center">
-                <p className="text-[11px] text-slate-500">
-                  Protected by HMAC-SHA256 session token signatures & role-based server enforcement (SRS §5.1).
-                </p>
               </div>
-            </div>
-          </main>
-        )}
 
-        {activeTab === 'admin' && isAuthenticated && (
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
-            {/* Top Admin User Status Bar */}
-            <div className="flex items-center justify-between bg-slate-900/60 border border-slate-800/80 rounded-xl px-4 py-2.5 text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>Signed in as <strong className="text-white font-mono">{authUsername || 'admin'}</strong></span>
-                <span className="text-slate-500">| Session Active</span>
-              </div>
               <button
                 type="button"
-                onClick={handleAdminLogout}
-                className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold transition-colors flex items-center gap-1"
+                onClick={handleClearChat}
+                title="Reset conversation session"
+                className="p-3 rounded-2xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-700 transition shadow-sm"
               >
-                <span>Sign Out</span>
+                <Trash2 className="w-4 h-4" />
               </button>
-            </div>
-
-            {/* Top Metric Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                  <span>System Health</span>
-                  <ShieldAlert className="w-4 h-4 text-sky-400" />
-                </div>
-                <div className="text-xl font-bold text-white capitalize flex items-center gap-2">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      health?.status === 'healthy' ? 'bg-emerald-400' : 'bg-amber-400'
-                    }`}
-                  />
-                  {health?.status || 'Unknown'}
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1 truncate">
-                  {health?.vector_db_provider?.toUpperCase()} Vector DB
+            </form>
+          </div>
+        ) : (
+          /* ════════════════════════════════════════════════════════════
+             ADMIN STUDIO INTERFACE VIEW
+             ════════════════════════════════════════════════════════════ */
+          <div className="space-y-6">
+            {/* Sub-navigation Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                  Scraper Studio & System Administration
+                </h1>
+                <p className="text-xs text-slate-500">
+                  Manage documentation scraping, monitor crawler health, review automated repairs, and inspect audit logs.
                 </p>
               </div>
 
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                  <span>Knowledge Base</span>
-                  <Database className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div className="text-xl font-bold text-white font-mono">
-                  {health?.total_indexed_chunks || 0}{' '}
-                  <span className="text-xs font-normal text-slate-400 font-sans">chunks</span>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Across {health?.total_indexed_pages || 0} validated pages
-                </p>
-              </div>
-
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                  <span>Active Collector ID</span>
-                  <Terminal className="w-4 h-4 text-indigo-400" />
-                </div>
-                <div className="text-sm font-bold text-sky-400 font-mono truncate">
-                  {collectorId || adminState.active_collector_id || '(none set)'}
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">Bright Data Scraper Studio</p>
-              </div>
-
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                  <span>Target Site</span>
-                  <Globe className="w-4 h-4 text-amber-400" />
-                </div>
-                <a
-                  href={targetUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm font-semibold text-slate-200 truncate flex items-center gap-1 hover:text-sky-400 transition-colors"
-                >
-                  <span className="truncate">{targetUrl}</span>
-                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                </a>
-                <p className="text-[11px] text-slate-500 mt-1">Sitemap-discoverable public docs</p>
+              {/* Sub-tab Navigation Pills */}
+              <div className="flex bg-slate-200/70 p-1 rounded-xl border border-slate-300/60 overflow-x-auto">
+                {[
+                  { id: 'overview', label: 'Overview', icon: Layers },
+                  { id: 'scraper', label: 'Scraper Studio', icon: Globe },
+                  { id: 'pages', label: 'Indexed Pages', icon: FileText },
+                  { id: 'healing', label: 'Self-Healing', icon: Wrench },
+                  { id: 'logs', label: 'Audit Logs', icon: Terminal },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setAdminSubTab(tab.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
+                        adminSubTab === tab.id
+                          ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/80'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Action Notice Alert */}
-            {actionNotice && (
-              <div
-                className={`p-4 rounded-xl text-sm flex items-start justify-between border shadow-md transition-all ${
-                  actionNotice.type === 'success'
-                    ? 'bg-emerald-950/40 border-emerald-800/80 text-emerald-200'
-                    : actionNotice.type === 'error'
-                    ? 'bg-rose-950/40 border-rose-800/80 text-rose-200'
-                    : 'bg-sky-950/40 border-sky-800/80 text-sky-200'
-                }`}
-              >
-                <div className="flex items-start gap-2.5">
-                  {actionNotice.type === 'success' && (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                  )}
-                  {actionNotice.type === 'error' && (
-                    <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-                  )}
-                  {actionNotice.type === 'info' && (
-                    <RefreshCw className="w-5 h-5 text-sky-400 animate-spin shrink-0 mt-0.5" />
-                  )}
-                  <div>
-                    <span className="font-semibold capitalize">{actionNotice.type}: </span>
-                    <span className="leading-relaxed">{actionNotice.message}</span>
-                  </div>
+            {/* Authentication Guard */}
+            {!isAuthenticated ? (
+              /* ──────────────── Admin Sign-In Card ──────────────── */
+              <div className="max-w-md mx-auto my-12 p-8 bg-white border border-slate-200 shadow-xl rounded-2xl">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <Lock className="w-6 h-6" />
                 </div>
-                <button
-                  onClick={() => setActionNotice(null)}
-                  className="text-slate-400 hover:text-white p-1 rounded transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* Pending Heal Approval Gate Banner (FR-503 to FR-505) */}
-            {health?.pending_heal && (
-              <div className="bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border-2 border-amber-500/80 rounded-2xl p-6 shadow-2xl space-y-4 animate-pulse">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-amber-500/30">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 rounded-xl">
-                      <AlertTriangle className="w-6 h-6 animate-bounce text-amber-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-amber-200 flex items-center gap-2">
-                        <span>Scraper Degradation Detected — Self-Healing Approval Required (FR-503)</span>
-                      </h3>
-                      <p className="text-xs text-amber-400/90 font-mono mt-0.5">
-                        Collector: {health.pending_heal.collector_id} | Heal Event: {health.pending_heal.id.slice(0, 8)}...
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => handleRejectHeal(health.pending_heal.id)}
-                      disabled={healingActionId === health.pending_heal.id}
-                      className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-rose-800 text-rose-300 hover:text-rose-200 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Reject Fix (FR-505)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApproveHeal(health.pending_heal.id)}
-                      disabled={healingActionId === health.pending_heal.id}
-                      className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-600/30 disabled:opacity-50 flex items-center gap-1.5"
-                    >
-                      {healingActionId === health.pending_heal.id ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Check className="w-3.5 h-3.5" />
-                      )}
-                      <span>Approve Fix & Re-Index (FR-504)</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="bg-slate-950/90 p-3.5 rounded-xl border border-amber-500/20 space-y-1">
-                    <span className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] block">
-                      Detected Breakage Diagnostic (FR-501)
-                    </span>
-                    <p className="text-amber-300 font-mono text-[11px] leading-relaxed">
-                      {health.pending_heal.break_description}
-                    </p>
-                  </div>
-                  <div className="bg-slate-950/90 p-3.5 rounded-xl border border-emerald-500/20 space-y-1">
-                    <span className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] block">
-                      Proposed Fix from Bright Data AI (FR-502)
-                    </span>
-                    <p className="text-emerald-300 font-mono text-[11px] leading-relaxed">
-                      {health.pending_heal.fix_summary || 'Autonomous scraper repair proposed by Bright Data Scraper Studio.'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
-            {/* Scraper Management Form (FR-101 & FR-102) */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-sky-400" />
-                    Sitemap Scraper Management & Ingestion (FR-101 – FR-104)
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Create scrapers via Bright Data CLI (<code className="text-sky-300">bdata scraper create</code>) and ingest documentation pages (<code className="text-sky-300">bdata scraper run</code>).
+                <div className="text-center mb-6">
+                  <h2 className="text-lg font-bold text-slate-900">Administrator Sign In</h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Enter your credentials from your environment file to access scraper controls, health monitor, and audit logs.
                   </p>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
-                {/* Form Controls */}
-                <div className="lg:col-span-2 space-y-4">
+                {loginError && (
+                  <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{loginError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleAdminLogin} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                      Target Documentation Site URL
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Username
                     </label>
                     <input
-                      type="url"
-                      value={targetUrl}
-                      onChange={(e) => setTargetUrl(e.target.value)}
-                      placeholder="https://docs.litellm.ai"
-                      className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 text-sm text-slate-100 placeholder-slate-500 outline-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                        Collector ID
-                      </label>
-                      <input
-                        type="text"
-                        value={collectorId}
-                        onChange={(e) => setCollectorId(e.target.value)}
-                        placeholder="c_abc123..."
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 text-sm font-mono text-sky-300 placeholder-slate-600 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                        Scraper Description
-                      </label>
-                      <input
-                        type="text"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Sitemap scraper for documentation"
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 text-sm text-slate-100 placeholder-slate-600 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={handleCreateScraper}
-                      disabled={creatingScraper || runningScraper || !targetUrl.trim()}
-                      className="px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 text-xs font-semibold transition-all flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {creatingScraper ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
-                      ) : (
-                        <PlusCircle className="w-4 h-4 text-sky-400" />
-                      )}
-                      <span>Create Scraper (bdata scraper create)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleRunScraper}
-                      disabled={runningScraper || creatingScraper}
-                      className="px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all shadow-lg shadow-sky-600/30 flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {runningScraper ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      ) : (
-                        <Play className="w-4 h-4 fill-current" />
-                      )}
-                      <span>Run Scraper & Ingest Pages (FR-102)</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Pipeline Info Card */}
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-3 text-xs">
-                  <span className="font-bold text-slate-200 flex items-center gap-1.5">
-                    <Info className="w-4 h-4 text-sky-400" />
-                    Ingestion Pipeline Flow
-                  </span>
-                  <div className="space-y-2 text-slate-400 leading-relaxed">
-                    <div className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-sky-950 text-sky-400 border border-sky-800 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                        1
-                      </span>
-                      <span>
-                        <strong className="text-slate-300">FR-101:</strong> Create Sitemap Scraper via Bright Data CLI.
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-sky-950 text-sky-400 border border-sky-800 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                        2
-                      </span>
-                      <span>
-                        <strong className="text-slate-300">FR-102:</strong> Collect structured JSON output and persist raw dumps to <code className="text-sky-300">./data/raw_scrapes/</code>.
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-sky-950 text-sky-400 border border-sky-800 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                        3
-                      </span>
-                      <span>
-                        <strong className="text-slate-300">FR-103:</strong> Strict PageValidator rejects empty titles/content and flags errors.
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="w-4 h-4 rounded-full bg-sky-950 text-sky-400 border border-sky-800 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                        4
-                      </span>
-                      <span>
-                        <strong className="text-slate-300">FR-104:</strong> Scrape run metadata recorded in <code className="text-sky-300">scrape_runs.json</code>.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Phase 2: Indexing Progress & Delta Re-indexing (FR-201 - FR-204 & SRS §3.2) */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-indigo-400" />
-                    Chunking & Embedding Pipeline (FR-201 – FR-204)
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Token-accurate chunking (<code className="text-sky-300">tiktoken</code>), AI/ML API embeddings with retry backoff, and delta re-indexing.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium border ${
-                      indexingProgress.status === 'indexing'
-                        ? 'bg-amber-950/60 text-amber-300 border-amber-800/80 animate-pulse'
-                        : indexingProgress.status === 'completed'
-                        ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/80'
-                        : indexingProgress.status === 'failed'
-                        ? 'bg-rose-950/60 text-rose-300 border-rose-800/80'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
-                    }`}
-                  >
-                    {indexingProgress.status === 'indexing' && (
-                      <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />
-                    )}
-                    {indexingProgress.status === 'completed' && (
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    )}
-                    {indexingProgress.status === 'failed' && (
-                      <AlertCircle className="w-3 h-3 text-rose-400" />
-                    )}
-                    <span className="capitalize">{indexingProgress.status}</span>
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={handleDeltaReindex}
-                    disabled={reindexing || indexingProgress.status === 'indexing'}
-                    className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-md shadow-indigo-600/20"
-                  >
-                    {reindexing ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    )}
-                    <span>Trigger Delta Re-Index (FR-204)</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress Bars & Details */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <div className="text-xs text-slate-400 mb-1 flex items-center justify-between">
-                    <span>Pages Processed</span>
-                    <span className="font-mono text-slate-200">
-                      {indexingProgress.processed_pages} / {indexingProgress.total_pages || indexingProgress.processed_pages}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden mt-2">
-                    <div
-                      className="bg-indigo-500 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${
-                          indexingProgress.total_pages > 0
-                            ? Math.min(100, (indexingProgress.processed_pages / indexingProgress.total_pages) * 100)
-                            : indexingProgress.processed_pages > 0 ? 100 : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <div className="text-xs text-slate-400 mb-1 flex items-center justify-between">
-                    <span>Chunks Generated</span>
-                    <span className="font-mono text-emerald-400 font-bold">
-                      {indexingProgress.processed_chunks}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 mt-2 truncate">
-                    Target: ~500 tokens / chunk with 50-token overlap
-                  </div>
-                </div>
-
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <div className="text-xs text-slate-400 mb-1">Last Indexed At</div>
-                  <div className="text-xs font-mono text-slate-200 font-semibold mt-1">
-                    {indexingProgress.last_indexed_at
-                      ? new Date(indexingProgress.last_indexed_at).toLocaleString()
-                      : 'Never'}
-                  </div>
-                  {indexingProgress.current_page_title && (
-                    <div className="text-[11px] text-sky-400 mt-1 truncate">
-                      Processing: {indexingProgress.current_page_title}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Scraped Pages Table View (SRS §3.1 UI Requirements) */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-emerald-400" />
-                    Scraped Documentation Pages ({scrapedPages.length})
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Live inspection of scraped records, validation status, and content lengths.
-                  </p>
-                </div>
-
-                {/* Filters & Search */}
-                <div className="flex items-center gap-2">
-                  <div className="flex bg-slate-950 rounded-lg p-1 border border-slate-800 text-xs">
-                    <button
-                      onClick={() => setPageFilter('all')}
-                      className={`px-3 py-1 rounded font-medium ${
-                        pageFilter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      All ({scrapedPages.length})
-                    </button>
-                    <button
-                      onClick={() => setPageFilter('valid')}
-                      className={`px-3 py-1 rounded font-medium ${
-                        pageFilter === 'valid' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60' : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Valid ({scrapedPages.filter((p) => p.is_valid).length})
-                    </button>
-                    <button
-                      onClick={() => setPageFilter('invalid')}
-                      className={`px-3 py-1 rounded font-medium ${
-                        pageFilter === 'invalid' ? 'bg-rose-950 text-rose-300 border border-rose-800/60' : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Flagged ({scrapedPages.filter((p) => !p.is_valid).length})
-                    </button>
-                  </div>
-
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
-                    <input
                       type="text"
-                      value={pageSearch}
-                      onChange={(e) => setPageSearch(e.target.value)}
-                      placeholder="Filter by title / URL..."
-                      className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-600 outline-none w-48 focus:border-sky-500"
+                      value={loginUsername}
+                      onChange={(e) => setLoginUsername(e.target.value)}
+                      placeholder="admin"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                      required
                     />
                   </div>
-                </div>
-              </div>
 
-              {/* Table Container */}
-              <div className="overflow-x-auto rounded-xl border border-slate-800">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
-                    <tr>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Title & Section</th>
-                      <th className="py-3 px-4">Source URL</th>
-                      <th className="py-3 px-4">Content Preview</th>
-                      <th className="py-3 px-4">Length</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/80 font-normal">
-                    {pagesLoading ? (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-400">
-                          <RefreshCw className="w-5 h-5 animate-spin mx-auto text-sky-400 mb-2" />
-                          <span>Loading scraped pages...</span>
-                        </td>
-                      </tr>
-                    ) : filteredPages.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400">
-                          <BookOpen className="w-8 h-8 mx-auto text-slate-600 mb-2" />
-                          <p className="font-semibold text-slate-300">No documentation pages to display</p>
-                          <p className="text-[11px] text-slate-500 mt-1 max-w-sm mx-auto">
-                            Click <strong className="text-sky-400">'Run Scraper & Ingest Pages'</strong> above to trigger data acquisition via Bright Data CLI.
-                          </p>
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredPages.map((page, pIdx) => (
-                        <tr key={pIdx} className="hover:bg-slate-800/40 transition-colors">
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            {page.is_valid ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800/50">
-                                <Check className="w-3 h-3 text-emerald-400" />
-                                Valid
-                              </span>
-                            ) : (
-                              <span
-                                title={page.error_reason || 'Validation failure'}
-                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-950/80 text-rose-300 border border-rose-800/50 cursor-help"
-                              >
-                                <X className="w-3 h-3 text-rose-400" />
-                                Flagged
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="font-semibold text-slate-200">{page.title || '(untitled)'}</div>
-                            {page.section && (
-                              <span className="inline-block mt-0.5 px-2 py-0.2 rounded text-[10px] bg-slate-800 text-slate-400">
-                                {page.section}
-                              </span>
-                            )}
-                            {page.error_reason && (
-                              <div className="text-[11px] text-rose-400 mt-0.5 flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" />
-                                {page.error_reason}
-                              </div>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 max-w-[240px]">
-                            <a
-                              href={page.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sky-400 hover:text-sky-300 truncate inline-flex items-center gap-1"
-                            >
-                              <span className="truncate">{page.url}</span>
-                              <ExternalLink className="w-3 h-3 shrink-0 text-slate-500" />
-                            </a>
-                          </td>
-                          <td className="py-3 px-4 text-slate-400 max-w-xs truncate font-mono text-[11px]">
-                            {page.content_snippet || '—'}
-                          </td>
-                          <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
-                            {page.content_length} chars
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="Enter administrator password..."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                      required
+                    />
+                  </div>
 
-            {/* Historical Scrape Runs Table (FR-104) */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <History className="w-4 h-4 text-indigo-400" />
-                    Scrape Execution Runs (FR-104 Metadata Log)
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Audit log of Bright Data scraper runs, status, and health metrics.
-                  </p>
-                </div>
-                <button
-                  onClick={fetchScrapeRuns}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                  title="Refresh runs"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${runsLoading ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-
-              <div className="overflow-x-auto rounded-xl border border-slate-800">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
-                    <tr>
-                      <th className="py-3 px-4">Run ID</th>
-                      <th className="py-3 px-4">Timestamp</th>
-                      <th className="py-3 px-4">Collector ID</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Pages</th>
-                      <th className="py-3 px-4">Details / Errors</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/80">
-                    {scrapeRuns.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-6 text-center text-slate-500">
-                          No scrape runs logged yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      scrapeRuns.map((run, rIdx) => (
-                        <tr key={rIdx} className="hover:bg-slate-800/40">
-                          <td className="py-3 px-4 font-mono text-sky-400 font-semibold">{run.id.slice(0, 8)}...</td>
-                          <td className="py-3 px-4 text-slate-400">
-                            {new Date(run.timestamp).toLocaleString()}
-                          </td>
-                          <td className="py-3 px-4 font-mono text-slate-300">{run.collector_id}</td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                                run.status === 'completed'
-                                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                                  : run.status === 'running'
-                                  ? 'bg-sky-950 text-sky-400 border border-sky-800'
-                                  : 'bg-rose-950 text-rose-400 border border-rose-800'
-                              }`}
-                            >
-                              {run.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 font-mono font-bold text-slate-200">{run.page_count}</td>
-                          <td className="py-3 px-4 text-slate-400 truncate max-w-xs">
-                            {run.error_summary || '—'}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Self-Healing & Scraper Recovery Section (FR-501 to FR-505 & SRS §3.5) */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 text-amber-400" />
-                    Self-Healing Monitor & Autonomous Scraper Recovery (FR-501 – FR-505)
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Continuous health verification, auto-healing via Bright Data CLI (<code className="text-sky-300">bdata scraper heal</code>), approval gates, and zero-downtime re-indexing.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleSimulateDegraded}
-                    disabled={simulatingDegraded}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900 border border-amber-700/80 text-amber-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md"
-                    title="Simulate a structural break to demonstrate the automated detection -> heal -> approval -> re-index loop"
-                  >
-                    {simulatingDegraded ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                    )}
-                    <span>Simulate Degraded Breakage (Demo Mode)</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Manual Heal Trigger Form */}
-              <form onSubmit={handleTriggerManualHeal} className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                  Manual Heal Trigger (FR-502)
-                </label>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="text"
-                    value={manualHealDesc}
-                    onChange={(e) => setManualHealDesc(e.target.value)}
-                    placeholder="Describe failure (e.g. 'Sitemap changed structure, missing content tags')..."
-                    className="flex-1 px-3.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:border-amber-500 outline-none"
-                  />
                   <button
                     type="submit"
-                    disabled={!manualHealDesc.trim() || triggeringHeal}
-                    className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+                    disabled={loginLoading}
+                    className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-sm transition shadow-sm flex items-center justify-center gap-2"
                   >
-                    {triggeringHeal ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    {loginLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
-                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <Lock className="w-4 h-4" />
                     )}
-                    <span>Trigger bdata scraper heal</span>
+                    <span>Sign In to Admin Studio</span>
                   </button>
-                </div>
-              </form>
+                </form>
 
-              {/* Heal Events History Log Table */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Heal Events History Log ({healEvents.length})
-                  </span>
-                  <button
-                    onClick={fetchHealEvents}
-                    className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white transition-colors"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${healsLoading ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto rounded-xl border border-slate-800">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider font-semibold">
-                      <tr>
-                        <th className="py-3 px-4">Heal ID</th>
-                        <th className="py-3 px-4">Timestamp</th>
-                        <th className="py-3 px-4">Breakage Diagnostic</th>
-                        <th className="py-3 px-4">Proposed Fix (bdata)</th>
-                        <th className="py-3 px-4">Status & Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/80">
-                      {healEvents.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-6 text-center text-slate-500">
-                            No heal events recorded yet.
-                          </td>
-                        </tr>
-                      ) : (
-                        healEvents.map((heal, hIdx) => (
-                          <tr key={hIdx} className="hover:bg-slate-800/40">
-                            <td className="py-3 px-4 font-mono text-amber-400 font-semibold">{heal.id.slice(0, 8)}...</td>
-                            <td className="py-3 px-4 text-slate-400 whitespace-nowrap">
-                              {new Date(heal.timestamp).toLocaleString()}
-                            </td>
-                            <td className="py-3 px-4 text-slate-200 max-w-xs leading-relaxed">
-                              {heal.break_description}
-                            </td>
-                            <td className="py-3 px-4 text-emerald-300 font-mono text-[11px] max-w-xs leading-relaxed">
-                              {heal.fix_summary || 'Analysis pending from Bright Data AI'}
-                            </td>
-                            <td className="py-3 px-4 whitespace-nowrap">
-                              {heal.approved === true ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">
-                                  <Check className="w-3 h-3" />
-                                  Approved & Re-indexed
-                                </span>
-                              ) : heal.approved === false ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-950 text-rose-300 border border-rose-800">
-                                  <X className="w-3 h-3" />
-                                  Rejected
-                                </span>
-                              ) : (
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    onClick={() => handleApproveHeal(heal.id)}
-                                    disabled={healingActionId === heal.id}
-                                    className="px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] transition-colors"
-                                  >
-                                    Approve
-                                  </button>
-                                  <button
-                                    onClick={() => handleRejectHeal(heal.id)}
-                                    disabled={healingActionId === heal.id}
-                                    className="px-2 py-1 rounded bg-slate-800 hover:bg-rose-900 text-slate-300 hover:text-rose-200 font-bold text-[10px] border border-slate-700 transition-colors"
-                                  >
-                                    Reject
-                                  </button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+                  <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                    Protected by HMAC session signatures & server-side authorization
+                  </p>
                 </div>
               </div>
-            </div>
-          </main>
-        )}
+            ) : (
+              /* ──────────────── Authenticated Admin Panel Views ──────────────── */
+              <div className="space-y-6">
+                {/* ════ Pending Self-Healing Review Alert Banner ════ */}
+                {pendingHeal && (
+                  <div className="p-5 rounded-2xl bg-amber-50/90 border border-amber-300 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-amber-100 text-amber-800">
+                          <AlertTriangle className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-amber-900">
+                              Automated Scraper Repair Awaiting Review
+                            </span>
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-200/80 text-amber-900 border border-amber-300">
+                              Action Required
+                            </span>
+                          </div>
+                          <p className="text-xs text-amber-800 mt-1">
+                            Breakage detected: {pendingHeal.break_description || 'Page count dropped significantly from previous run.'}
+                          </p>
+                        </div>
+                      </div>
 
-      </div>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleApproveHeal(pendingHeal.heal_id)}
+                          disabled={approvingHeal}
+                          className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+                        >
+                          {approvingHeal ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Check className="w-3.5 h-3.5" />
+                          )}
+                          <span>Approve AI Fix</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleRejectHeal(pendingHeal.heal_id)}
+                          disabled={rejectingHeal}
+                          className="px-3 py-1.5 rounded-lg bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold transition shadow-sm flex items-center gap-1"
+                        >
+                          {rejectingHeal ? (
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3 h-3" />
+                          )}
+                          <span>Reject</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Proposed Fix Diagnostic */}
+                    {pendingHeal.proposed_fix && (
+                      <div className="p-3 bg-white rounded-xl border border-amber-200 text-xs text-slate-700 font-mono">
+                        <span className="font-sans font-bold text-amber-900 block mb-1">
+                          Proposed Scraper Schema Fix:
+                        </span>
+                        {pendingHeal.proposed_fix}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ════ SUBTAB: Overview Dashboard ════ */}
+                {adminSubTab === 'overview' && (
+                  <div className="space-y-6">
+                    {/* KPI Stat Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* System Health */}
+                      <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-card">
+                        <div className="flex items-center justify-between text-slate-500 mb-2">
+                          <span className="text-xs font-bold uppercase tracking-wider">Health Status</span>
+                          <Activity className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-3 h-3 rounded-full ${
+                              health?.status === 'healthy'
+                                ? 'bg-emerald-500'
+                                : health?.status === 'degraded'
+                                ? 'bg-amber-500'
+                                : 'bg-rose-500'
+                            }`}
+                          />
+                          <span className="text-xl font-bold capitalize text-slate-900">
+                            {health?.status || 'Unknown'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2">
+                          Auto-recovery monitor active
+                        </p>
+                      </div>
+
+                      {/* Active Collector */}
+                      <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-card">
+                        <div className="flex items-center justify-between text-slate-500 mb-2">
+                          <span className="text-xs font-bold uppercase tracking-wider">Collector ID</span>
+                          <Globe className="w-4 h-4 text-sky-600" />
+                        </div>
+                        <div className="text-base font-bold font-mono text-slate-900 truncate">
+                          {collectorId || adminState?.active_collector_id || 'Not configured'}
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2">
+                          Bright Data Scraper Studio
+                        </p>
+                      </div>
+
+                      {/* Total Pages */}
+                      <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-card">
+                        <div className="flex items-center justify-between text-slate-500 mb-2">
+                          <span className="text-xs font-bold uppercase tracking-wider">Indexed Pages</span>
+                          <FileText className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900">
+                          {health?.total_indexed_pages || scrapedPages.length || 0}
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2">
+                          Validated documentation pages
+                        </p>
+                      </div>
+
+                      {/* Vector Chunks */}
+                      <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-card">
+                        <div className="flex items-center justify-between text-slate-500 mb-2">
+                          <span className="text-xs font-bold uppercase tracking-wider">Vector Chunks</span>
+                          <Database className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900">
+                          {health?.total_indexed_chunks || 0}
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-2">
+                          Indexed in local ChromaDB store
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quick Action Bar & Live Demo Controls */}
+                    <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-card space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900">
+                            Live System Actions & Demo Controls
+                          </h3>
+                          <p className="text-xs text-slate-500">
+                            Trigger scraper runs, test delta re-indexing, or simulate site breakage for judging demos.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button
+                          onClick={handleRunScraper}
+                          disabled={runningScraper || !collectorId}
+                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm flex items-center gap-2"
+                        >
+                          {runningScraper ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Play className="w-3.5 h-3.5" />
+                          )}
+                          <span>Run Ingestion Pipeline</span>
+                        </button>
+
+                        <button
+                          onClick={handleDeltaReindex}
+                          disabled={reindexing}
+                          className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold transition shadow-sm flex items-center gap-2"
+                        >
+                          {reindexing ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Database className="w-3.5 h-3.5 text-indigo-600" />
+                          )}
+                          <span>Trigger Delta Re-Index</span>
+                        </button>
+
+                        <button
+                          onClick={handleSimulateDegraded}
+                          disabled={simulatingDegraded}
+                          className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold transition shadow-sm flex items-center gap-2 ml-auto"
+                        >
+                          {simulatingDegraded ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Zap className="w-3.5 h-3.5 text-rose-600" />
+                          )}
+                          <span>Simulate Site Breakage (Demo Mode)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Ingestion & Indexing Progress Card */}
+                    <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-card space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Database className="w-4 h-4 text-indigo-600" />
+                          <h3 className="text-sm font-bold text-slate-900">
+                            Knowledge Base Ingestion Progress
+                          </h3>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-slate-700">
+                          {indexingProgress.indexed_pages} / {indexingProgress.total_pages} Pages Indexed
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                        <div
+                          className="h-full bg-gradient-to-r from-indigo-600 to-sky-500 transition-all duration-300"
+                          style={{ width: `${indexingProgress.progress_pct || 100}%` }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>
+                          Status: <span className="font-semibold text-slate-700 capitalize">{indexingProgress.status}</span>
+                        </span>
+                        {indexingProgress.current_page_title && (
+                          <span className="truncate max-w-xs text-slate-500">
+                            Current: {indexingProgress.current_page_title}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ════ SUBTAB: Scraper Studio ════ */}
+                {adminSubTab === 'scraper' && (
+                  <div className="space-y-6">
+                    <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-card space-y-5">
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900">
+                          Bright Data Scraper Studio Configuration
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Create or manage the web crawler collector for extracting sitemap documentation.
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleCreateScraper} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                              Target Documentation URL
+                            </label>
+                            <input
+                              type="url"
+                              value={targetUrl}
+                              onChange={(e) => setTargetUrl(e.target.value)}
+                              placeholder="https://docs.example.com"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                              Scraper Description
+                            </label>
+                            <input
+                              type="text"
+                              value={description}
+                              onChange={(e) => setDescription(e.target.value)}
+                              placeholder="Sitemap scraper for documentation pages"
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Active Collector ID
+                          </label>
+                          <input
+                            type="text"
+                            value={collectorId}
+                            onChange={(e) => setCollectorId(e.target.value)}
+                            placeholder="c_xxxxxxxxxxxxxxx"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm font-mono text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-2">
+                          <button
+                            type="submit"
+                            disabled={creatingScraper}
+                            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm flex items-center gap-2"
+                          >
+                            {creatingScraper ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Plus className="w-3.5 h-3.5" />
+                            )}
+                            <span>Create New Scraper</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleRunScraper}
+                            disabled={runningScraper || !collectorId}
+                            className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm flex items-center gap-2"
+                          >
+                            {runningScraper ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Play className="w-3.5 h-3.5" />
+                            )}
+                            <span>Run Ingestion Pipeline</span>
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+
+                    {/* Scrape Execution History Table */}
+                    <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-card space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-900">
+                          Scrape Execution History
+                        </h3>
+                        <button
+                          onClick={fetchScrapeRuns}
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Refresh
+                        </button>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-xl border border-slate-200">
+                        <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Run ID</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Timestamp</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Status</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Valid Pages</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Flagged</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Execution Time</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {scrapeRuns.length === 0 ? (
+                              <tr>
+                                <td colSpan="6" className="px-4 py-4 text-center text-slate-400">
+                                  No scrape runs recorded yet.
+                                </td>
+                              </tr>
+                            ) : (
+                              scrapeRuns.map((run, rIdx) => (
+                                <tr key={rIdx} className="hover:bg-slate-50/80">
+                                  <td className="px-4 py-2.5 font-mono text-slate-600">{run.run_id}</td>
+                                  <td className="px-4 py-2.5 text-slate-500">
+                                    {new Date(run.timestamp).toLocaleString()}
+                                  </td>
+                                  <td className="px-4 py-2.5">
+                                    <span
+                                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                        run.status === 'completed'
+                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                          : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                      }`}
+                                    >
+                                      {run.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-2.5 font-semibold text-slate-800">
+                                    {run.valid_pages ?? run.page_count}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-slate-500">
+                                    {run.flagged_pages ?? 0}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-slate-500 font-mono">
+                                    {run.execution_time_seconds
+                                      ? `${run.execution_time_seconds.toFixed(2)}s`
+                                      : '—'}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ════ SUBTAB: Scraped Documentation Pages ════ */}
+                {adminSubTab === 'pages' && (
+                  <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-card space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900">
+                          Scraped Documentation Pages ({filteredPages.length})
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          Validated pages from the latest scrape ready for embedding and retrieval.
+                        </p>
+                      </div>
+
+                      {/* Search & Filter Bar */}
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="text"
+                            value={searchFilter}
+                            onChange={(e) => setSearchFilter(e.target.value)}
+                            placeholder="Search page title or URL..."
+                            className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:border-indigo-600 focus:bg-white outline-none w-56"
+                          />
+                        </div>
+
+                        <select
+                          value={pageStatusFilter}
+                          onChange={(e) => setPageStatusFilter(e.target.value)}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 focus:border-indigo-600 focus:bg-white outline-none"
+                        >
+                          <option value="all">All Pages</option>
+                          <option value="valid">Valid Only</option>
+                          <option value="flagged">Flagged Only</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Pages Table */}
+                    <div className="overflow-x-auto rounded-xl border border-slate-200">
+                      <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Status</th>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Document Title</th>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">URL</th>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Content Size</th>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Headings</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filteredPages.length === 0 ? (
+                            <tr>
+                              <td colSpan="5" className="px-4 py-6 text-center text-slate-400">
+                                No documentation pages found matching your search.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredPages.map((page, pIdx) => (
+                              <tr key={pIdx} className="hover:bg-slate-50/80">
+                                <td className="px-4 py-2.5">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                      page.is_valid
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    }`}
+                                  >
+                                    {page.is_valid ? 'Valid' : 'Flagged'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 font-semibold text-slate-900">
+                                  {page.title || 'Untitled Page'}
+                                </td>
+                                <td className="px-4 py-2.5 text-indigo-600 font-mono truncate max-w-xs">
+                                  <a
+                                    href={page.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:underline flex items-center gap-1"
+                                  >
+                                    <span className="truncate">{page.url}</span>
+                                    <ExternalLink className="w-3 h-3 shrink-0" />
+                                  </a>
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-500 font-mono">
+                                  {page.content_length} chars
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-500">
+                                  {page.headings && page.headings.length > 0 ? (
+                                    <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">
+                                      {page.headings.length} sections
+                                    </span>
+                                  ) : (
+                                    '—'
+                                  )}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* ════ SUBTAB: Self-Healing & Recovery ════ */}
+                {adminSubTab === 'healing' && (
+                  <div className="space-y-6">
+                    {/* Manual Scraper Repair Form */}
+                    <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-card space-y-4">
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900">
+                          Autonomous AI Scraper Repair & Healing
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          When website layouts change, DocMind automatically diagnoses breakages and prompts Bright Data AI to heal the scraper.
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleTriggerManualHeal} className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Breakage Description / Custom Healing Instructions
+                          </label>
+                          <input
+                            type="text"
+                            value={manualHealDesc}
+                            onChange={(e) => setManualHealDesc(e.target.value)}
+                            placeholder="e.g. Target documentation updated navbar selectors, 0 pages scraped"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                            required
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={triggeringHeal}
+                          className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm flex items-center gap-2"
+                        >
+                          {triggeringHeal ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Wrench className="w-3.5 h-3.5" />
+                          )}
+                          <span>Trigger AI Scraper Healing</span>
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Healing Events History Table */}
+                    <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-card space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-900">
+                          Self-Healing Events History
+                        </h3>
+                        <button
+                          onClick={fetchHealEvents}
+                          className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Refresh
+                        </button>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-xl border border-slate-200">
+                        <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Heal ID</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Timestamp</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Status</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Breakage Reason</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Proposed Fix</th>
+                              <th className="px-4 py-2.5 font-bold text-slate-700">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {healEvents.length === 0 ? (
+                              <tr>
+                                <td colSpan="6" className="px-4 py-4 text-center text-slate-400">
+                                  No self-healing events recorded yet.
+                                </td>
+                              </tr>
+                            ) : (
+                              healEvents.map((heal, hIdx) => (
+                                <tr key={hIdx} className="hover:bg-slate-50/80">
+                                  <td className="px-4 py-2.5 font-mono text-slate-600">{heal.heal_id}</td>
+                                  <td className="px-4 py-2.5 text-slate-500">
+                                    {new Date(heal.timestamp).toLocaleString()}
+                                  </td>
+                                  <td className="px-4 py-2.5">
+                                    <span
+                                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                        heal.status === 'approved'
+                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                          : heal.status === 'pending_review'
+                                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                          : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                      }`}
+                                    >
+                                      {heal.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-2.5 text-slate-700 max-w-xs truncate">
+                                    {heal.break_description}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-slate-600 font-mono max-w-xs truncate">
+                                    {heal.proposed_fix || '—'}
+                                  </td>
+                                  <td className="px-4 py-2.5">
+                                    {heal.status === 'pending_review' ? (
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          onClick={() => handleApproveHeal(heal.heal_id)}
+                                          disabled={approvingHeal}
+                                          className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px]"
+                                        >
+                                          Approve
+                                        </button>
+                                        <button
+                                          onClick={() => handleRejectHeal(heal.heal_id)}
+                                          disabled={rejectingHeal}
+                                          className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[10px] border border-rose-200"
+                                        >
+                                          Reject
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span className="text-slate-400 text-[11px]">Completed</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ════ SUBTAB: Security & Audit Logs ════ */}
+                {adminSubTab === 'logs' && (
+                  <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-card space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900">
+                          Security & Operational Audit Trail
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          Chronological immutable record of authentication attempts, scraper actions, and recovery events.
+                        </p>
+                      </div>
+                      <button
+                        onClick={fetchAuditLogs}
+                        className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Refresh
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-slate-200">
+                      <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Timestamp</th>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Actor</th>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Action</th>
+                            <th className="px-4 py-2.5 font-bold text-slate-700">Details</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {auditLogs.length === 0 ? (
+                            <tr>
+                              <td colSpan="4" className="px-4 py-4 text-center text-slate-400">
+                                No audit events logged yet.
+                              </td>
+                            </tr>
+                          ) : (
+                            auditLogs.map((log, lIdx) => (
+                              <tr key={lIdx} className="hover:bg-slate-50/80">
+                                <td className="px-4 py-2.5 text-slate-500 font-mono">
+                                  {new Date(log.timestamp).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-2.5 font-semibold text-slate-800 font-mono">
+                                  {log.actor}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                      log.action.includes('SUCCESS') || log.action.includes('APPROVED')
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : log.action.includes('FAILED') || log.action.includes('REJECTED')
+                                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                    }`}
+                                  >
+                                    {log.action}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-600 font-mono truncate max-w-sm">
+                                  {log.details ? JSON.stringify(log.details) : '—'}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* ──────────────── Footer ──────────────── */}
+      <footer className="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-700">DocMind</span>
+            <span>—</span>
+            <span>Self-Healing Documentation RAG</span>
+          </div>
+          <div className="flex items-center gap-4 text-slate-400">
+            <span>Powered by Bright Data Scraper Studio & OpenAI-compatible Models</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
