@@ -70,9 +70,40 @@ class OpenAILLMProvider(BaseLLMProvider):
         messages.append({"role": "user", "content": user_prompt})
 
         response = await client.chat.completions.create(
+
             model=self._model_name,
             messages=messages,
             temperature=temp,
         )
 
         return response.choices[0].message.content or ""
+
+    async def stream_generate(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        history: Optional[List[ChatMessage]] = None,
+        temperature: Optional[float] = None,
+    ):
+        """Yield streaming token chunks from OpenAI or OpenAI-compatible endpoint."""
+        client = self._get_client()
+        temp = temperature if temperature is not None else settings.llm_temperature
+
+        messages = [{"role": "system", "content": system_prompt}]
+        if history:
+            for msg in history:
+                if msg.role in ("user", "assistant"):
+                    messages.append({"role": msg.role, "content": msg.content})
+        messages.append({"role": "user", "content": user_prompt})
+
+        stream = await client.chat.completions.create(
+            model=self._model_name,
+            messages=messages,
+            temperature=temp,
+            stream=True,
+        )
+
+        async for chunk in stream:
+            if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+

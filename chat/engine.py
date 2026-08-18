@@ -168,6 +168,96 @@ class ChatQueryEngine:
             grounded=True,
         )
 
+    async def process_query_stream(
+        self,
+        raw_query: str,
+        session_id: Optional[str] = None,
+        top_k: Optional[int] = None,
+        confidence_threshold: Optional[float] = None,
+    ):
+        """Stream token deltas for low-latency perceived response (SSE)."""
+        start_time = time.perf_counter()
+        session = session_id or str(uuid.uuid4())
+        sanitized_query = sanitize_user_input(raw_query)
+
+        k = top_k or settings.retrieval_top_k
+        threshold = (
+            confidence_threshold
+            if confidence_threshold is not None
+            else self.confidence_threshold
+        )
+
+        query_vector = await self.embedding_provider.embed_query(sanitized_query)
+        retrieved_chunks_with_scores: List[Tuple[Chunk, float]] = await self.vector_store.search(
+            query_vector=query_vector,
+            top_k=k,
+            confidence_threshold=threshold,
+        )
+
+        if not retrieved_chunks_with_scores:
+            history_manager.add_message(session, ChatMessage(role="user", content=sanitized_query))
+            history_manager.add_message(session, ChatMessage(role="assistant", content=NOT_FOUND_FALLBACK_MESSAGE))
+            yield json.dumps({
+                "type": "done",
+                "delta": NOT_FOUND_FALLBACK_MESSAGE,
+                "answer": NOT_FOUND_FALLBACK_MESSAGE,
+                "citations": [],
+                "session_id": session,
+                "grounded": False,
+                "latency_ms": round((time.perf_counter() - start_time) * 1000.0, 2),
+            }) + "\n\n"
+            return
+
+        citations: List[Citation] = []
+        seen_urls = set()
+        for chunk, score in retrieved_chunks_with_scores:
+            url = chunk.metadata.get("url", "")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                citations.append(
+                    Citation(
+                        url=url,
+                        title=chunk.metadata.get("title", "Documentation"),
+                        section=chunk.metadata.get("section"),
+                        snippet=chunk.text[:180] + ("..." if len(chunk.text) > 180 else ""),
+                        similarity_score=round(score, 3),
+                    )
+                )
+
+        yield json.dumps({
+            "type": "citations",
+            "citations": [c.model_dump(mode="json") for c in citations],
+            "session_id": session,
+        }) + "\n\n"
+
+        context_str = format_context_chunks(retrieved_chunks_with_scores)
+        system_prompt = GROUNDED_RAG_SYSTEM_PROMPT.format(context=context_str)
+        history = history_manager.get_history(session)
+
+        full_answer_parts = []
+        async for token in self.llm_provider.stream_generate(
+            system_prompt=system_prompt,
+            user_prompt=sanitized_query,
+            history=history,
+            temperature=settings.llm_temperature,
+        ):
+            full_answer_parts.append(token)
+            yield json.dumps({"type": "token", "delta": token}) + "\n\n"
+
+        full_answer = "".join(full_answer_parts)
+        history_manager.add_message(session, ChatMessage(role="user", content=sanitized_query))
+        history_manager.add_message(session, ChatMessage(role="assistant", content=full_answer, citations=citations))
+
+        yield json.dumps({
+            "type": "done",
+            "answer": full_answer,
+            "citations": [c.model_dump(mode="json") for c in citations],
+            "session_id": session,
+            "grounded": True,
+            "latency_ms": round((time.perf_counter() - start_time) * 1000.0, 2),
+        }) + "\n\n"
+
 
 # Global default engine instance
 chat_engine = ChatQueryEngine()
+

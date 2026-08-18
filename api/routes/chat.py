@@ -29,6 +29,27 @@ async def ask_question(request: Request, body: ChatRequest) -> ChatResponse:
         )
 
 
+@router.post("/stream")
+async def ask_question_stream(request: Request, body: ChatRequest):
+    """Stream response tokens in real-time via Server-Sent Events (SSE) for low perceived latency."""
+    from fastapi.responses import StreamingResponse
+
+    try:
+        generator = chat_engine.process_query_stream(
+            raw_query=body.query,
+            session_id=body.session_id,
+            top_k=body.top_k,
+        )
+        return StreamingResponse(generator, media_type="text/event-stream")
+    except Exception as exc:
+        logger.exception("Error initiating chat stream: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating stream: {str(exc)}",
+        )
+
+
+
 @router.get("/history/{session_id}", response_model=List[ChatMessage])
 async def get_session_history(session_id: str) -> List[ChatMessage]:
     """Retrieve in-memory conversation history for a given session (FR-404)."""

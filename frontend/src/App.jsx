@@ -506,7 +506,7 @@ export default function App() {
     setChatLoading(true);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -515,19 +515,91 @@ export default function App() {
         }),
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      if (!res.ok || !res.body) {
+        // Fallback to non-streaming endpoint
+        const fallbackRes = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: userMessage.content, session_id: sessionId }),
+        });
+        const data = await fallbackRes.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: data.answer,
+            citations: data.citations || [],
+            latency_ms: data.latency_ms,
+            grounded: data.grounded,
+          },
+        ]);
+        return;
+      }
 
+      // Add placeholder assistant message for streaming tokens
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: data.answer,
-          citations: data.citations || [],
-          latency_ms: data.latency_ms,
-          grounded: data.grounded,
+          content: '',
+          citations: [],
+          grounded: true,
         },
       ]);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop(); // Keep partial chunk
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const eventData = JSON.parse(trimmed);
+            if (eventData.type === 'token') {
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.role === 'assistant') {
+                  last.content += eventData.delta;
+                }
+                return updated;
+              });
+            } else if (eventData.type === 'citations') {
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.role === 'assistant') {
+                  last.citations = eventData.citations;
+                }
+                return updated;
+              });
+            } else if (eventData.type === 'done') {
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.role === 'assistant') {
+                  last.content = eventData.answer;
+                  last.citations = eventData.citations || last.citations;
+                  last.latency_ms = eventData.latency_ms;
+                  last.grounded = eventData.grounded;
+                }
+                return updated;
+              });
+            }
+          } catch (pErr) {
+            // Ignore parse errors on partial frames
+          }
+        }
+      }
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -542,6 +614,7 @@ export default function App() {
       setChatLoading(false);
     }
   };
+
 
   const handleClearChat = async () => {
     try {
