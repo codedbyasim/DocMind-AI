@@ -13,8 +13,9 @@ router = APIRouter(prefix="/health", tags=["Health"])
 @router.get("", response_model=HealthStatusResponse)
 async def get_health_status() -> HealthStatusResponse:
     """Retrieve the overall system health, active provider configuration, and indexing metrics."""
-    health_state, _ = HealthMonitor.evaluate_system_health()
+    health_state, _, _ = HealthMonitor.evaluate_system_health()
     vector_store = get_vector_store()
+
     chunk_count = await vector_store.count()
 
     latest_run = run_logger.get_latest_run()

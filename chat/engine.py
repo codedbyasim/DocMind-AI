@@ -1,9 +1,11 @@
 """Chat Query Engine coordinating RAG pipeline, grounding, and citations."""
 
+import json
 import logging
 import time
 import uuid
 from typing import List, Optional, Tuple
+
 
 from core.config import settings
 from core.models import ChatMessage, ChatResponse, Chunk, Citation

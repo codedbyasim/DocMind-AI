@@ -48,13 +48,14 @@ export default function App() {
   const [description, setDescription] = useState('Sitemap scraper for documentation pages');
   const [collectorId, setCollectorId] = useState('');
   // Phase 6: Admin Authentication & Token State (SRS §5.1, §2.2)
-  const [authToken, setAuthToken] = useState(() => localStorage.getItem('docmind_admin_token') || 'docmind_dev_admin_key_12345');
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('docmind_admin_token') || '');
   const [authUsername, setAuthUsername] = useState(() => localStorage.getItem('docmind_admin_user') || 'admin');
-  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('docmind_admin_token') || true));
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('docmind_admin_token')));
   const [loginUsername, setLoginUsername] = useState('admin');
   const [loginPassword, setLoginPassword] = useState('docmind_admin_password');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
+
 
   // Scraper Actions & Results
   const [creatingScraper, setCreatingScraper] = useState(false);
@@ -117,6 +118,19 @@ export default function App() {
     }
     return headers;
   };
+
+  const checkAuthResponse = (res) => {
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem('docmind_admin_token');
+      localStorage.removeItem('docmind_admin_user');
+      setAuthToken('');
+      setAuthUsername('');
+      setIsAuthenticated(false);
+      return false;
+    }
+    return true;
+  };
+
 
   const handleAdminLogin = async (e) => {
     e?.preventDefault();
@@ -193,6 +207,7 @@ export default function App() {
     setHealsLoading(true);
     try {
       const res = await fetch('/api/admin/heal/history?limit=15', { headers: getAuthHeaders() });
+      if (!checkAuthResponse(res)) return;
       if (res.ok) {
         const data = await res.json();
         setHealEvents(data);
@@ -203,6 +218,7 @@ export default function App() {
       setHealsLoading(false);
     }
   };
+
 
   const handleTriggerManualHeal = async (e) => {
     e?.preventDefault();
@@ -320,6 +336,7 @@ export default function App() {
   const fetchAdminState = async () => {
     try {
       const res = await fetch('/api/admin/state', { headers: getAuthHeaders() });
+      if (!checkAuthResponse(res)) return;
       if (res.ok) {
         const data = await res.json();
         setAdminState(data);
@@ -334,6 +351,7 @@ export default function App() {
   const fetchIndexingProgress = async () => {
     try {
       const res = await fetch('/api/admin/indexing/progress', { headers: getAuthHeaders() });
+      if (!checkAuthResponse(res)) return;
       if (res.ok) {
         const data = await res.json();
         setIndexingProgress(data);
@@ -347,6 +365,7 @@ export default function App() {
     setPagesLoading(true);
     try {
       const res = await fetch('/api/admin/pages/latest', { headers: getAuthHeaders() });
+      if (!checkAuthResponse(res)) return;
       if (res.ok) {
         const data = await res.json();
         setScrapedPages(data);
@@ -362,6 +381,7 @@ export default function App() {
     setRunsLoading(true);
     try {
       const res = await fetch('/api/admin/runs?limit=15', { headers: getAuthHeaders() });
+      if (!checkAuthResponse(res)) return;
       if (res.ok) {
         const data = await res.json();
         setScrapeRuns(data);
@@ -372,6 +392,7 @@ export default function App() {
       setRunsLoading(false);
     }
   };
+
 
   const handleDeltaReindex = async () => {
     if (reindexing) return;
