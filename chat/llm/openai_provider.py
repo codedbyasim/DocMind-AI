@@ -40,11 +40,15 @@ class OpenAILLMProvider(BaseLLMProvider):
             from openai import AsyncOpenAI
             if not self._api_key:
                 raise ValueError("LLM API key missing. Set LLM_API_KEY or OPENAI_API_KEY in .env")
-            client_kwargs = {"api_key": self._api_key}
+            client_kwargs = {
+                "api_key": self._api_key,
+                "timeout": settings.llm_timeout_seconds,
+            }
             if self._base_url:
                 client_kwargs["base_url"] = self._base_url
             self._client = AsyncOpenAI(**client_kwargs)
         return self._client
+
 
     async def generate(
         self,

@@ -1,17 +1,44 @@
 """Scrape Run & Heal Event logger per FR-104 and SRS Section 6.1.
 
 Maintains an in-memory and persistent JSON log of scrape executions and healing
-events to feed pipeline health checks.
+events to feed pipeline health checks with atomic disk durability (NFR-05).
 """
 
 import json
 import logging
 import os
+import tempfile
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 from core.models import HealEvent, ScrapeRun, ScrapeRunStatus
 
 logger = logging.getLogger("docmind.scraper.logger")
+
+
+def atomic_write_json(target_path: Path, data: Any) -> None:
+    """Safely write JSON data to disk atomically using temporary file swap (NFR-05).
+
+    Guarantees no half-written or corrupted JSON files on sudden process restarts or crash.
+    """
+    target_path = Path(target_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_fd, temp_file = tempfile.mkstemp(
+        dir=target_path.parent,
+        prefix=f"{target_path.name}.tmp.",
+    )
+    try:
+        with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        # Atomic rename on POSIX and modern Windows (NTFS)
+        os.replace(temp_file, target_path)
+    except Exception as exc:
+        if os.path.exists(temp_file):
+            try:
+                os.remove(temp_file)
+            except OSError:
+                pass
+        logger.error("Atomic write failed for %s: %s", target_path, exc)
+        raise
 
 
 class ScrapeRunLogger:
@@ -38,9 +65,8 @@ class ScrapeRunLogger:
 
     def _save_runs(self) -> None:
         try:
-            with open(self.runs_file, "w", encoding="utf-8") as f:
-                data = [run.model_dump(mode="json") for run in self._scrape_runs]
-                json.dump(data, f, indent=2)
+            data = [run.model_dump(mode="json") for run in self._scrape_runs]
+            atomic_write_json(self.runs_file, data)
         except Exception as exc:
             logger.error("Failed to persist scrape runs: %s", exc)
 
@@ -57,9 +83,8 @@ class ScrapeRunLogger:
 
     def _save_heals(self) -> None:
         try:
-            with open(self.heals_file, "w", encoding="utf-8") as f:
-                data = [heal.model_dump(mode="json") for heal in self._heal_events]
-                json.dump(data, f, indent=2)
+            data = [heal.model_dump(mode="json") for heal in self._heal_events]
+            atomic_write_json(self.heals_file, data)
         except Exception as exc:
             logger.error("Failed to persist heal events: %s", exc)
 
@@ -100,16 +125,14 @@ class ScrapeRunLogger:
         return list(reversed(self._heal_events))[:limit]
 
     def save_raw_scrape(self, run_id: str, raw_pages: List[dict]) -> Path:
-        """Persist raw scraped JSON payload before transformation (FR-102)."""
+        """Persist raw scraped JSON payload atomically before transformation (FR-102)."""
         raw_dir = Path("./data/raw_scrapes")
         raw_dir.mkdir(parents=True, exist_ok=True)
         run_file = raw_dir / f"{run_id}.json"
         latest_file = raw_dir / "latest.json"
 
-        with open(run_file, "w", encoding="utf-8") as f:
-            json.dump(raw_pages, f, indent=2)
-        with open(latest_file, "w", encoding="utf-8") as f:
-            json.dump(raw_pages, f, indent=2)
+        atomic_write_json(run_file, raw_pages)
+        atomic_write_json(latest_file, raw_pages)
 
         logger.info("Persisted %d raw pages to %s and %s", len(raw_pages), run_file, latest_file)
         return run_file
@@ -139,14 +162,13 @@ class ScrapeRunLogger:
             return []
 
     def save_scraper_state(self, state: dict) -> None:
-        """Persist active scraper state (collector_id, target_url, etc)."""
+        """Persist active scraper state atomically (collector_id, target_url, etc)."""
         state_file = Path("./data/scraper_state.json")
         state_file.parent.mkdir(parents=True, exist_ok=True)
         try:
             existing = self.load_scraper_state()
             existing.update(state)
-            with open(state_file, "w", encoding="utf-8") as f:
-                json.dump(existing, f, indent=2)
+            atomic_write_json(state_file, existing)
         except Exception as exc:
             logger.error("Failed to save scraper state: %s", exc)
 
@@ -165,4 +187,3 @@ class ScrapeRunLogger:
 
 # Global singleton instance
 run_logger = ScrapeRunLogger()
-

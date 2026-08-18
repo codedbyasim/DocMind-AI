@@ -242,16 +242,24 @@ def audit_log(action: str, actor: str, details: Optional[Dict[str, Any]] = None)
     try:
         existing = []
         if AUDIT_LOG_FILE.exists():
-            with open(AUDIT_LOG_FILE, "r", encoding="utf-8") as f:
-                existing = json.load(f)
+            try:
+                with open(AUDIT_LOG_FILE, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+            except Exception:
+                existing = []
         existing.append(entry)
-        with open(AUDIT_LOG_FILE, "w", encoding="utf-8") as f:
+        
+        # Atomic write
+        temp_file = AUDIT_LOG_FILE.with_suffix(f".tmp.{os.getpid()}")
+        with open(temp_file, "w", encoding="utf-8") as f:
             json.dump(existing[-200:], f, indent=2)  # Keep rolling last 200 events
+        os.replace(temp_file, AUDIT_LOG_FILE)
     except Exception as exc:
         logger.error("Failed to persist audit log entry: %s", exc)
 
     logger.info("AUDIT [%s] Actor='%s' Action='%s': %s", entry["timestamp"], actor, action, details)
     return entry
+
 
 
 def get_audit_logs(limit: int = 50) -> List[Dict[str, Any]]:

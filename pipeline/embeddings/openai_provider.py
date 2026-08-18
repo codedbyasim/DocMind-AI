@@ -50,11 +50,15 @@ class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
                 raise ValueError(
                     "Embedding API key missing. Set EMBEDDING_API_KEY or OPENAI_API_KEY in .env"
                 )
-            client_kwargs = {"api_key": self._api_key}
+            client_kwargs = {
+                "api_key": self._api_key,
+                "timeout": settings.embedding_timeout_seconds,
+            }
             if self._base_url:
                 client_kwargs["base_url"] = self._base_url
             self._client = AsyncOpenAI(**client_kwargs)
         return self._client
+
 
     async def _embed_batch_with_retry(self, batch_texts: List[str]) -> List[List[float]]:
         """Embed a batch of texts with retry logic and exponential backoff per FR-202."""

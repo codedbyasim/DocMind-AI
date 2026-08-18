@@ -113,11 +113,14 @@ class Settings(BaseSettings):
         default=64,
         description="Batch size for embedding generation",
     )
+    embedding_timeout_seconds: float = Field(
+        default=30.0,
+        description="Request timeout in seconds for embedding generation",
+    )
     ollama_base_url: str = Field(
         default="http://localhost:11434",
         description="Base URL for local Ollama instance",
     )
-
 
     # --------------------------------------------------------------------------
     # LLM Configuration (Swappable via LLM_PROVIDER)
@@ -144,6 +147,15 @@ class Settings(BaseSettings):
         le=2.0,
         description="Sampling temperature for grounded RAG generation",
     )
+    llm_timeout_seconds: float = Field(
+        default=45.0,
+        description="Request timeout in seconds for LLM answer generation",
+    )
+    scraper_cli_timeout_seconds: int = Field(
+        default=180,
+        description="Maximum execution timeout in seconds for Bright Data CLI processes",
+    )
+
 
     # --------------------------------------------------------------------------
     # Vector Database Configuration (Swappable via VECTOR_DB_PROVIDER)

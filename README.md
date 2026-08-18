@@ -254,10 +254,27 @@ cat data/logs/automation_summary.md
 
 ---
 
-## 🛡️ Security & Authentication
+---
 
-- **Admin Routes (`/api/admin/*`):** Protected by `ADMIN_API_KEY` header (`X-Admin-API-Key: <ADMIN_API_KEY>`) and signed HMAC-SHA256 session tokens (`POST /api/admin/login`).
-- **End-User Chat (`/api/chat`):** Public, rate-limited per client IP (`CHAT_RATE_LIMIT_PER_MINUTE`), and equipped with prompt-injection sanitization.
-- **Audit Logging:** Every scraping run, heal request, and heal approval/rejection decision is logged with timestamps and actor metadata per SRS §5.1 in `./data/logs/audit_log.json`.
+## 🛡️ Phase 8: Testing, Reliability & Production Readiness (NFR-01 to NFR-08)
+
+### 1. Durability & Crash Safety (NFR-05)
+- **Atomic File Writes:** JSON logs (`scrape_runs.json`, `heal_events.json`, `audit_log.json`) utilize atomic file swapping via `atomic_write_json` (`os.replace`) to prevent corrupted state on sudden process termination.
+- **Persistent Vector Indexing:** Local ChromaDB data survives full server restarts without loss of chunks or source metadata.
+
+### 2. Timeouts & Graceful Error Handling
+- **Bounded Request Lifetimes:** Configurable timeouts protect against zombie processes: `EMBEDDING_TIMEOUT_SECONDS=30.0`, `LLM_TIMEOUT_SECONDS=45.0`, `SCRAPER_CLI_TIMEOUT_SECONDS=180`.
+- **Empty Knowledge Base Fallback:** Queries on un-indexed installations return user-friendly guidance instead of 500 exceptions.
+
+---
+
+## ⚖️ Known Limitations & Production Considerations
+
+| Component | Current Implementation | Production Recommendation |
+| :--- | :--- | :--- |
+| **Chat Latency** | ~6.5s – 10.8s (via remote AI/ML API non-streaming proxy) | Enable token streaming or deploy direct low-latency Tier-4 OpenAI/Ollama endpoints to reach <3s targets. |
+| **Admin Session Storage** | Browser `localStorage` with HMAC-SHA256 session token | Upgrade to `httpOnly`, `Secure`, `SameSite=Strict` cookies for high-security enterprise environments. |
+| **Vector DB Scaling** | ChromaDB local directory (ideal for 100–10,000 pages) | Set `VECTOR_DB_PROVIDER=pinecone` to scale to millions of chunks across distributed clusters. |
+
 
 

@@ -103,7 +103,19 @@ class BrightDataClient:
                 )
 
 
-            stdout_bytes, stderr_bytes = await process.communicate()
+            try:
+                stdout_bytes, stderr_bytes = await asyncio.wait_for(
+                    process.communicate(),
+                    timeout=settings.scraper_cli_timeout_seconds,
+                )
+            except asyncio.TimeoutError:
+                logger.error("[CLI Timeout] Command exceeded %ds timeout: %s", settings.scraper_cli_timeout_seconds, cmd_display)
+                try:
+                    process.kill()
+                except Exception:
+                    pass
+                return -1, "", f"Command timed out after {settings.scraper_cli_timeout_seconds} seconds: {cmd_display}"
+
             stdout = stdout_bytes.decode("utf-8", errors="replace")
             stderr = stderr_bytes.decode("utf-8", errors="replace")
             returncode = process.returncode or 0
@@ -123,6 +135,7 @@ class BrightDataClient:
         except Exception as exc:
             logger.exception("[CLI Exception] Failed to execute '%s': %s", cmd_display, exc)
             return -1, "", str(exc)
+
 
     async def create_scraper(self, target_url: str, description: str) -> Optional[str]:
         """Create a new sitemap scraper for the given documentation URL (FR-101).
