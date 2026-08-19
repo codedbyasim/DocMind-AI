@@ -87,10 +87,11 @@ class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
                         str(e),
                     )
                     raise
-                # Exponential backoff: 0.5s, 1.0s, 2.0s...
-                await asyncio.sleep(0.5 * (2 ** (attempt - 1)))
+                # Exponential backoff: 1.0s, 2.0s, 4.0s...
+                await asyncio.sleep(1.0 * (2 ** (attempt - 1)))
 
         return []
+
 
     async def embed_texts(self, texts: List[str]) -> List[List[float]]:
         if not texts:
