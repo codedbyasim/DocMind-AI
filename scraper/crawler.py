@@ -3,8 +3,9 @@
 import asyncio
 import logging
 import re
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 from urllib.parse import urljoin, urlparse
+
 import httpx
 from bs4 import BeautifulSoup
 
