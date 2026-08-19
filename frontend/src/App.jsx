@@ -675,8 +675,10 @@ export default function App() {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           collector_id: collectorId.trim() || undefined,
+          url: targetUrl.trim() || undefined,
         }),
       });
+
 
       if (!checkAuthResponse(res)) return;
       const data = await res.json();
