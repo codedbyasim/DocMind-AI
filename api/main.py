@@ -17,7 +17,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
+# DocMind API Entrypoint - Reloaded for dynamic settings
 logger = logging.getLogger("docmind.api")
+
 
 
 @asynccontextmanager
