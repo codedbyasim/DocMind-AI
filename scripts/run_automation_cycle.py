@@ -107,12 +107,24 @@ async def run_automation_cycle(
         logger.info("System Health Assessment: %s (%s)", health_state.value, reason)
 
         # Step 3: Handle Healthy vs Degraded States
-        if health_state == SystemHealthState.HEALTHY:
-            logger.info("System is HEALTHY. No healing required.")
+        # IMPORTANT: If the current scrape succeeded with enough pages, mark as SUCCESS
+        # regardless of stale pending heal events from previous runs.
+        current_run_healthy = report["valid_pages"] >= settings.min_expected_pages
+        if health_state == SystemHealthState.HEALTHY or (
+            health_state == SystemHealthState.HEALING and current_run_healthy
+        ):
+            if health_state == SystemHealthState.HEALING and current_run_healthy:
+                logger.info(
+                    "Current scrape is healthy (%d pages). Skipping heal — HEALING state "
+                    "is from a previous pending event, not the current run.",
+                    report["valid_pages"],
+                )
+            else:
+                logger.info("System is HEALTHY. No healing required.")
             report["final_health"] = SystemHealthState.HEALTHY.value
             report["outcome"] = "SUCCESS"
             report["details"] = f"Scrape run {scrape_run.id} verified healthy with {report['valid_pages']} valid pages."
-        elif health_state in (SystemHealthState.DEGRADED, SystemHealthState.HEALING):
+        elif health_state == SystemHealthState.DEGRADED:
 
             logger.warning("[Step 3/4] Degradation detected: %s. Initiating autonomous healing...", diag)
             report["heal_applied"] = True
@@ -159,6 +171,7 @@ async def run_automation_cycle(
             report["final_health"] = SystemHealthState.ERROR.value
             report["outcome"] = "FAILED"
             report["details"] = f"Scrape failed: {reason}"
+
 
     except Exception as exc:
         logger.exception("Fatal unhandled exception in automation cycle: %s", exc)

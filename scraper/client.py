@@ -230,9 +230,19 @@ class BrightDataClient:
                 logger.warning("[Bright Data Parse Error] %s", exc)
 
         # --- UNIVERSAL DIRECT CRAWLER FALLBACK ---
-        # When Bright Data collector is bound to another domain or returns dead pages,
-        # extract live documentation pages directly using async HTML/sitemap crawler.
-        logger.info("[Universal Ingestion] Activating Direct Web Documentation Crawler for: %s", target_url)
+        # Activates in two cases:
+        # 1. CLI returned code 0 but only dead/invalid pages (wrong domain bound to collector)
+        # 2. CLI returned non-zero code (e.g. missing BRIGHTDATA_API_KEY in CI/CD environments)
+        #    In this case we extract documentation pages directly via HTTP sitemap + HTML crawling.
+        if code != 0:
+            logger.info(
+                "[Universal Ingestion] Bright Data CLI unavailable (exit code %d: %s). "
+                "Activating Direct Web Documentation Crawler for: %s",
+                code, stderr.strip()[:120], target_url,
+            )
+        else:
+            logger.info("[Universal Ingestion] Activating Direct Web Documentation Crawler for: %s", target_url)
+
         try:
             from scraper.crawler import DirectDocsCrawler
             crawler = DirectDocsCrawler(max_pages=20)
