@@ -211,33 +211,41 @@ class BrightDataClient:
             ["scraper", "run", collector_id, target_url, "--json"]
         )
 
-        if code != 0:
-            err_msg = f"CLI error (exit code {code}): {stderr.strip() or stdout.strip()}"
-            return False, [], err_msg
+        valid_data: List[Dict[str, Any]] = []
+        if code == 0 and stdout:
+            try:
+                json_start = stdout.find("[")
+                json_end = stdout.rfind("]")
+                if json_start != -1 and json_end != -1:
+                    parsed = json.loads(stdout[json_start : json_end + 1])
+                    if isinstance(parsed, list):
+                        # Filter out dead page error objects from Bright Data
+                        valid_data = [
+                            d for d in parsed
+                            if isinstance(d, dict) and not d.get("error_code") and not d.get("error") and (d.get("url") or d.get("title") or d.get("content"))
+                        ]
+                        if valid_data:
+                            return True, valid_data, ""
+            except Exception as exc:
+                logger.warning("[Bright Data Parse Error] %s", exc)
 
+        # --- UNIVERSAL DIRECT CRAWLER FALLBACK ---
+        # When Bright Data collector is bound to another domain or returns dead pages,
+        # extract live documentation pages directly using async HTML/sitemap crawler.
+        logger.info("[Universal Ingestion] Activating Direct Web Documentation Crawler for: %s", target_url)
         try:
-            # Parse JSON array from CLI output
-            json_start = stdout.find("[")
-            json_end = stdout.rfind("]")
-            if json_start != -1 and json_end != -1:
-                data = json.loads(stdout[json_start : json_end + 1])
-                if isinstance(data, list):
-                    return True, data, ""
-            
-            # Single object output fallback
-            obj_start = stdout.find("{")
-            obj_end = stdout.rfind("}")
-            if obj_start != -1 and obj_end != -1:
-                data = json.loads(stdout[obj_start : obj_end + 1])
-                if isinstance(data, dict):
-                    # Check if results are nested
-                    items = data.get("data") or data.get("results") or [data]
-                    if isinstance(items, list):
-                        return True, items, ""
-
-            return False, [], f"No valid JSON payload parsed from CLI output. Raw:\n{stdout[:300]}"
+            from scraper.crawler import DirectDocsCrawler
+            crawler = DirectDocsCrawler(max_pages=20)
+            crawled_pages = await crawler.crawl_site(target_url)
+            if crawled_pages:
+                logger.info("[Universal Ingestion] Successfully crawled %d pages for %s", len(crawled_pages), target_url)
+                return True, crawled_pages, ""
         except Exception as exc:
-            return False, [], f"JSON parsing exception: {exc}"
+            logger.error("[Universal Ingestion Failed] Error crawling %s: %s", target_url, exc)
+
+        err_msg = f"CLI error (exit code {code}): {stderr.strip() or stdout.strip() or 'No pages found'}"
+        return False, [], err_msg
+
 
     async def heal_scraper(self, collector_id: str, description: str) -> Tuple[bool, str]:
         """Trigger an automated fix for a broken scraper (FR-502).
