@@ -201,7 +201,7 @@ class Settings(BaseSettings):
         description="Number of most relevant chunks to retrieve per query",
     )
     confidence_threshold: float = Field(
-        default=0.65,
+        default=0.50,
         description="Minimum similarity score threshold for grounding",
     )
     chat_rate_limit_per_minute: int = Field(
