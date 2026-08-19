@@ -621,7 +621,7 @@ export default function App() {
     e?.preventDefault();
     if (creatingScraper) return;
     setCreatingScraper(true);
-    setActionNotice({ type: 'info', message: 'Creating Sitemap Scraper with Bright Data Studio...' });
+    setActionNotice({ type: 'info', message: 'Creating Sitemap Scraper with Bright Data Studio... (this may take up to 3 minutes)' });
 
     try {
       const res = await fetch('/api/admin/scraper/create', {
@@ -635,7 +635,20 @@ export default function App() {
 
       if (!checkAuthResponse(res)) return;
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to create scraper');
+
+      if (!res.ok) {
+        // On timeout/CLI failure, show a helpful tip instead of a generic error
+        const isTimeout = res.status === 503 || (data.detail && data.detail.toLowerCase().includes('timed out'));
+        if (isTimeout) {
+          setActionNotice({
+            type: 'warning',
+            message: `⚠️ Bright Data CLI timed out creating the scraper. This is normal for large sites. You can: (1) Go to Bright Data Scraper Studio → copy your Collector ID → paste it below and click "Run Scraper", or (2) Use your existing Collector ID: ${settings?.brightdata_collector_id || 'c_msyg7ceoo6la3ofn6'}`,
+          });
+        } else {
+          throw new Error(data.detail || 'Failed to create scraper');
+        }
+        return;
+      }
 
       setCollectorId(data.collector_id);
       setActionNotice({

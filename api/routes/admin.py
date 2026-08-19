@@ -130,20 +130,36 @@ async def reindex_delta(payload: Optional[DeltaReindexRequest] = None):
 @router.post("/scraper/create")
 async def create_scraper(payload: CreateScraperRequest):
     """Create a new sitemap scraper using Bright Data Scraper Studio (FR-101)."""
-    collector_id = await admin_service.create_scraper(
-        target_url=payload.url,
-        description=payload.description,
-    )
+    try:
+        collector_id = await admin_service.create_scraper(
+            target_url=payload.url,
+            description=payload.description,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                f"Bright Data CLI timed out or failed: {exc}. "
+                "Tip: Create the scraper manually in Bright Data Scraper Studio, "
+                "then paste the Collector ID (e.g. c_xxxxxxxxxxxx) into the 'Run Scraper' field below."
+            ),
+        )
+
     if not collector_id:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create scraper via Bright Data CLI. Check credentials or site accessibility.",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Bright Data CLI ran but did not return a Collector ID. "
+                "Please create the scraper manually in Bright Data Scraper Studio "
+                "and enter your Collector ID (format: c_xxxxxxxxxxxx) directly in the Run Scraper field."
+            ),
         )
     return {
         "collector_id": collector_id,
         "url": payload.url,
         "message": f"Successfully created scraper on Bright Data Scraper Studio with Collector ID {collector_id}",
     }
+
 
 
 @router.post("/scraper/run", response_model=ScrapeResultResponse)
