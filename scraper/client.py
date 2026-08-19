@@ -250,8 +250,14 @@ class BrightDataClient:
             if crawled_pages:
                 logger.info("[Universal Ingestion] Successfully crawled %d pages for %s", len(crawled_pages), target_url)
                 return True, crawled_pages, ""
+            logger.warning("[Universal Ingestion] Crawler returned 0 pages for %s", target_url)
+        except ImportError as exc:
+            logger.error(
+                "[Universal Ingestion Failed] Missing dependency — ensure 'beautifulsoup4' and 'lxml' "
+                "are installed (pip install beautifulsoup4 lxml): %s", exc
+            )
         except Exception as exc:
-            logger.error("[Universal Ingestion Failed] Error crawling %s: %s", target_url, exc)
+            logger.error("[Universal Ingestion Failed] Error crawling %s: %s", target_url, exc, exc_info=True)
 
         err_msg = f"CLI error (exit code {code}): {stderr.strip() or stdout.strip() or 'No pages found'}"
         return False, [], err_msg

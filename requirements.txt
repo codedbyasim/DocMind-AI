@@ -16,6 +16,10 @@ tiktoken
 # LLM & AI Clients
 openai
 
+# Web Crawling (Universal Documentation Scraper fallback)
+beautifulsoup4
+lxml
+
 # Testing & Utilities
 pytest
 pytest-asyncio
