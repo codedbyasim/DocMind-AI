@@ -597,6 +597,7 @@ export default function App() {
       const res = await fetch('/api/admin/indexing/reindex', {
         method: 'POST',
         headers: getAuthHeaders(),
+        body: JSON.stringify({}),
       });
 
       if (!checkAuthResponse(res)) return;
@@ -605,7 +606,7 @@ export default function App() {
 
       setActionNotice({
         type: 'success',
-        message: `Delta re-indexing initiated. Reindexed ${data.reindexed_pages || 0} pages.`,
+        message: `Delta re-indexing initiated. Reindexed ${data.indexed_pages || data.reindexed_pages || 0} pages into knowledge base.`,
       });
       fetchIndexingProgress();
       fetchHealth();
@@ -668,9 +669,11 @@ export default function App() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Failed to execute scraper run');
 
+      const validCount = data.valid_count ?? data.pages?.length ?? 0;
+      const flaggedCount = data.failed_count ?? 0;
       setActionNotice({
         type: 'success',
-        message: `Scrape completed! ${data.valid_pages} valid pages indexed (${data.flagged_pages} flagged).`,
+        message: `Scrape completed! ${validCount} valid pages indexed (${flaggedCount} flagged).`,
       });
       fetchLatestPages();
       fetchScrapeRuns();
@@ -735,8 +738,8 @@ export default function App() {
 
         for (const line of lines) {
           const trimmed = line.trim();
-          if (!trimmed.startsWith('data: ')) continue;
-          const jsonStr = trimmed.substring(6);
+          if (!trimmed) continue;
+          const jsonStr = trimmed.startsWith('data: ') ? trimmed.substring(6).trim() : trimmed;
 
           try {
             const event = JSON.parse(jsonStr);
@@ -746,7 +749,7 @@ export default function App() {
             } else if (event.type === 'token') {
               accumulatedAnswer += event.delta;
             } else if (event.type === 'done') {
-              accumulatedAnswer = event.answer || accumulatedAnswer;
+              accumulatedAnswer = event.answer || event.delta || accumulatedAnswer;
               receivedCitations = event.citations || receivedCitations;
               isGrounded = event.grounded ?? true;
               latency = event.latency_ms || 0;
@@ -773,6 +776,7 @@ export default function App() {
           }
         }
       }
+
 
       // Finalize streaming
       setMessages((prev) => {

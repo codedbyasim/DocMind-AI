@@ -79,46 +79,32 @@ class BrightDataClient:
         cmd_display = f"{bin_path} {' '.join(full_args)}"
         logger.info("[CLI Invocation] Executing: %s", cmd_display)
 
-        try:
-            # On Windows, executing npx.cmd or batch scripts via create_subprocess_shell
-            # avoids WinError 193 (%1 is not a valid Win32 application)
+        def _exec_sync() -> Tuple[int, str, str]:
+            import subprocess
             if sys.platform == "win32":
                 quoted_args = " ".join(f'"{a}"' if " " in a else a for a in full_args)
-                shell_cmd = f'"{bin_path}" {quoted_args}'
-                process = await asyncio.create_subprocess_shell(
-                    shell_cmd,
-                    stdin=asyncio.subprocess.DEVNULL,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
+                cmd_line = f'"{bin_path}" {quoted_args}'
+                proc = subprocess.run(
+                    cmd_line,
+                    capture_output=True,
+                    text=True,
+                    shell=True,
                     env=env,
-                )
-            else:
-                process = await asyncio.create_subprocess_exec(
-                    bin_path,
-                    *full_args,
-                    stdin=asyncio.subprocess.DEVNULL,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    env=env,
-                )
-
-
-            try:
-                stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                    process.communicate(),
                     timeout=settings.scraper_cli_timeout_seconds,
                 )
-            except asyncio.TimeoutError:
-                logger.error("[CLI Timeout] Command exceeded %ds timeout: %s", settings.scraper_cli_timeout_seconds, cmd_display)
-                try:
-                    process.kill()
-                except Exception:
-                    pass
-                return -1, "", f"Command timed out after {settings.scraper_cli_timeout_seconds} seconds: {cmd_display}"
+            else:
+                proc = subprocess.run(
+                    [bin_path] + full_args,
+                    capture_output=True,
+                    text=True,
+                    shell=False,
+                    env=env,
+                    timeout=settings.scraper_cli_timeout_seconds,
+                )
+            return proc.returncode or 0, proc.stdout or "", proc.stderr or ""
 
-            stdout = stdout_bytes.decode("utf-8", errors="replace")
-            stderr = stderr_bytes.decode("utf-8", errors="replace")
-            returncode = process.returncode or 0
+        try:
+            returncode, stdout, stderr = await asyncio.to_thread(_exec_sync)
 
             if returncode != 0:
                 logger.warning(
@@ -133,6 +119,11 @@ class BrightDataClient:
 
             return returncode, stdout, stderr
         except Exception as exc:
+            import subprocess
+            if isinstance(exc, subprocess.TimeoutExpired):
+                logger.error("[CLI Timeout] Command exceeded %ds timeout: %s", settings.scraper_cli_timeout_seconds, cmd_display)
+                return -1, "", f"Command timed out after {settings.scraper_cli_timeout_seconds} seconds: {cmd_display}"
+
             logger.exception("[CLI Exception] Failed to execute '%s': %s", cmd_display, exc)
             return -1, "", str(exc)
 

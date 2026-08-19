@@ -299,7 +299,15 @@ class AdminScraperService:
         from admin.monitor import HealthMonitor
         _, _, heal_event = await HealthMonitor.check_and_auto_heal(self)
 
+        if not heal_event:
+            success, heal_event = await self.trigger_heal(
+                collector_id=cid,
+                break_description="Simulated site layout change: page count dropped to 1 page.",
+                actor=actor,
+            )
+
         return run, heal_event
+
 
 
 # Global service instance

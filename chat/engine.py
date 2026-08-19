@@ -199,15 +199,7 @@ class ChatQueryEngine:
         if not retrieved_chunks_with_scores:
             history_manager.add_message(session, ChatMessage(role="user", content=sanitized_query))
             history_manager.add_message(session, ChatMessage(role="assistant", content=NOT_FOUND_FALLBACK_MESSAGE))
-            yield json.dumps({
-                "type": "done",
-                "delta": NOT_FOUND_FALLBACK_MESSAGE,
-                "answer": NOT_FOUND_FALLBACK_MESSAGE,
-                "citations": [],
-                "session_id": session,
-                "grounded": False,
-                "latency_ms": round((time.perf_counter() - start_time) * 1000.0, 2),
-            }) + "\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'delta': NOT_FOUND_FALLBACK_MESSAGE, 'answer': NOT_FOUND_FALLBACK_MESSAGE, 'citations': [], 'session_id': session, 'grounded': False, 'latency_ms': round((time.perf_counter() - start_time) * 1000.0, 2)})}\n\n"
             return
 
         citations: List[Citation] = []
@@ -226,11 +218,7 @@ class ChatQueryEngine:
                     )
                 )
 
-        yield json.dumps({
-            "type": "citations",
-            "citations": [c.model_dump(mode="json") for c in citations],
-            "session_id": session,
-        }) + "\n\n"
+        yield f"data: {json.dumps({'type': 'citations', 'citations': [c.model_dump(mode='json') for c in citations], 'session_id': session})}\n\n"
 
         context_str = format_context_chunks(retrieved_chunks_with_scores)
         system_prompt = GROUNDED_RAG_SYSTEM_PROMPT.format(context=context_str)
@@ -244,20 +232,14 @@ class ChatQueryEngine:
             temperature=settings.llm_temperature,
         ):
             full_answer_parts.append(token)
-            yield json.dumps({"type": "token", "delta": token}) + "\n\n"
+            yield f"data: {json.dumps({'type': 'token', 'delta': token})}\n\n"
 
         full_answer = "".join(full_answer_parts)
         history_manager.add_message(session, ChatMessage(role="user", content=sanitized_query))
         history_manager.add_message(session, ChatMessage(role="assistant", content=full_answer, citations=citations))
 
-        yield json.dumps({
-            "type": "done",
-            "answer": full_answer,
-            "citations": [c.model_dump(mode="json") for c in citations],
-            "session_id": session,
-            "grounded": True,
-            "latency_ms": round((time.perf_counter() - start_time) * 1000.0, 2),
-        }) + "\n\n"
+        yield f"data: {json.dumps({'type': 'done', 'answer': full_answer, 'citations': [c.model_dump(mode='json') for c in citations], 'session_id': session, 'grounded': True, 'latency_ms': round((time.perf_counter() - start_time) * 1000.0, 2)})}\n\n"
+
 
 
 # Global default engine instance

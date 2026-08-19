@@ -103,13 +103,16 @@ async def get_indexing_progress():
 
 
 @router.post("/indexing/reindex", response_model=DeltaReindexResponse)
-async def reindex_delta(payload: DeltaReindexRequest):
+async def reindex_delta(payload: Optional[DeltaReindexRequest] = None):
     """Trigger delta re-indexing on a specific subset of pages or run (FR-204)."""
     try:
+        scrape_run_id = payload.scrape_run_id if payload else None
+        page_urls = payload.page_urls if payload else None
         pages_cnt, chunks_cnt = await admin_service.reindex_delta(
-            scrape_run_id=payload.scrape_run_id,
-            page_urls=payload.page_urls,
+            scrape_run_id=scrape_run_id,
+            page_urls=page_urls,
         )
+
         return DeltaReindexResponse(
             success=True,
             indexed_pages=pages_cnt,

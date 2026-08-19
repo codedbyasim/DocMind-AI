@@ -184,9 +184,11 @@ async def test_chat_endpoint_graceful_degradation_on_provider_timeout():
 @pytest.mark.asyncio
 async def test_scraper_client_cli_timeout_handling():
     """Confirm Bright Data client catches process timeouts gracefully without hanging."""
+    import subprocess
     bdata = BrightDataClient()
 
-    with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd=["npx", "scraper"], timeout=180)):
         code, stdout, stderr = await bdata.run_cli_command(["scraper", "run", "c_test", "https://test.com"])
         assert code == -1
         assert "timed out" in stderr.lower()
+
