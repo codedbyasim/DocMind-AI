@@ -86,6 +86,7 @@ class BrightDataClient:
                 cmd_line = f'"{bin_path}" {quoted_args}'
                 proc = subprocess.run(
                     cmd_line,
+                    stdin=subprocess.DEVNULL,
                     capture_output=True,
                     text=True,
                     shell=True,
@@ -95,6 +96,7 @@ class BrightDataClient:
             else:
                 proc = subprocess.run(
                     [bin_path] + full_args,
+                    stdin=subprocess.DEVNULL,
                     capture_output=True,
                     text=True,
                     shell=False,
@@ -102,6 +104,7 @@ class BrightDataClient:
                     timeout=settings.scraper_cli_timeout_seconds,
                 )
             return proc.returncode or 0, proc.stdout or "", proc.stderr or ""
+
 
         try:
             returncode, stdout, stderr = await asyncio.to_thread(_exec_sync)
