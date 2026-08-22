@@ -93,8 +93,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | ⚙️ [**docs/SETUP.md**](docs/SETUP.md) | Environment setup, `.env` reference table, and local dev |
 | 🔌 [**docs/API.md**](docs/API.md) | Full REST API reference with request & response schemas |
 | 🐳 [**docs/DEPLOYMENT.md**](docs/DEPLOYMENT.md) | Docker deployment, security hardening, and volumes |
-| 🎬 [**docs/DEMO.md**](docs/DEMO.md) | Step-by-step presentation script & judging highlights |
 | 🖼️ [**docs/SCREENSHOTS.md**](docs/SCREENSHOTS.md) | Live application screenshots and UI walkthrough |
+
 
 ---
 
